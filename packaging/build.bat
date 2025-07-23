@@ -82,7 +82,7 @@ echo [步骤2] 使用 Nuitka 打包应用...
 echo [信息] 开始时间: %time%
 set "LOG_FILE=%PROJECT_ROOT%\build\nuitka_build.log"
 if exist "%LOG_FILE%" del "%LOG_FILE%"
-python -m nuitka  --standalone --windows-console-mode=disable %ICON_OPTION% --windows-product-name="Tools-oxr" --windows-company-name="OXR" --windows-file-version=1.0.0 --windows-product-version=1.0.0 --windows-file-description="PyWebView + Vue3 Desktop App" --include-data-dir=dist=dist --include-data-file=server\api.py=api.py --include-data-file=server\utils.py=utils.py --include-package=flask   --include-package=waitress --include-package=logging  --include-package=threading  --output-dir=build --remove-output --assume-yes-for-downloads --plugin-enable=tk-inter --plugin-enable=pywebview --plugin-enable=upx %USE_UPX% --lto=yes --jobs=4 --show-progress --show-scons --show-modules server\main.py
+python -m nuitka  --standalone --windows-console-mode=disable %ICON_OPTION% --windows-product-name="Tools-oxr" --windows-company-name="OXR" --windows-file-version=1.0.0 --windows-product-version=1.0.0 --windows-file-description="PyWebView + Vue3 Desktop App" --include-data-dir=dist=dist --include-data-file=server\utils.py=utils.py --include-package=flask   --include-package=waitress --include-package=logging  --include-package=threading  --output-dir=build --remove-output --assume-yes-for-downloads --plugin-enable=tk-inter --plugin-enable=pywebview --plugin-enable=upx %USE_UPX% --lto=yes --jobs=4 --show-progress --show-scons --show-modules server\main.py
 
 if %errorlevel% neq 0 (
     echo [错误] Nuitka 打包失败
