@@ -8,7 +8,7 @@ sys_bp = Blueprint("sys", __name__)
 @sys_bp.route("/api/hello")
 def hello_api():
     """示例API端点"""
-    return {"message": f"Hello from {APP_NAME}!", "status": "success"}
+    return {"message": f"Hello from Tools-py-oxr!", "status": "success"}
 
 
 @sys_bp.route("/api/system-info")

@@ -1,0 +1,9 @@
+Traceback (most recent call last):
+  File "E:\Dev\Project\tools-py-oxr\build\main.dist\main.py", line 9, in <module>
+    from flask import Flask, send_from_directory
+    
+  File "E:\Dev\Project\tools-py-oxr\build\main.dist\flask\__init__.py", line 5, in <module flask>
+  File "E:\Dev\Project\tools-py-oxr\build\main.dist\flask\json\__init__.py", line 6, in <module flask.json>
+  File "E:\Dev\Project\tools-py-oxr\build\main.dist\flask\globals.py", line 6, in <module flask.globals>
+  File "E:\Dev\Project\tools-py-oxr\build\main.dist\werkzeug\__init__.py", line 2, in <module werkzeug>
+ModuleNotFoundError: No module named 'werkzeug.test'

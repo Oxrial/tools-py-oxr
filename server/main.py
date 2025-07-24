@@ -7,40 +7,78 @@ import threading
 import time
 import webview
 from flask import Flask, send_from_directory
-from routes.create_api import file_bp
+from flasgger import Swagger
+from flasgger.utils import swag_from
+from api.file import file_bp
+from api.sys import sys_bp
 import waitress
 
 # ====================== 配置区域 ======================
 APP_NAME = "Tools-py-oxr"  # 应用名称
 PORT = 58462  # 服务器端口（选择不常用端口）
-DEBUG_MODE = False  # 调试模式开关（打包时设为False）
+DEBUG_MODE = True  # 调试模式开关（打包时设为False）
 LOG_FILE = "app_debug.log"  # 日志文件路径
 GUI_ENGINE = "edgechromium"  # WebView引擎: 'edgechromium', 'cef', 'mshtml'
 # =====================================================
 
 
 def setup_logging():
-    """配置日志系统"""
-    logging.basicConfig(
-        filename=LOG_FILE if not DEBUG_MODE else None,
-        level=logging.DEBUG,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    # 同时输出到控制台（仅调试模式）
-    if DEBUG_MODE:
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setFormatter(
-            logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
-        )
-        logging.getLogger().addHandler(console_handler)
+    """配置日志系统，确保在打包环境下也能正确输出"""
+    # 创建日志目录
+    log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+    os.makedirs(log_dir, exist_ok=True)
 
-    logging.info("=" * 50)
-    logging.info("%s 启动", APP_NAME)
-    logging.info("Python 版本: %s", sys.version)
-    logging.info("系统平台: %s", sys.platform)
-    logging.info("工作目录: %s", os.getcwd())
-    logging.info("=" * 50)
+    # 设置日志文件名（带时间戳）
+    log_file = os.path.join(log_dir, f"app_{time.strftime('%Y%m%d_%H%M%S')}.log")
+
+    # 创建日志格式
+    formatter = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+    )
+
+    # 配置根日志记录器
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    # 文件处理器（始终启用）
+    file_handler = logging.FileHandler(log_file, encoding="utf-8")
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+
+    # 控制台处理器（仅开发环境启用）
+    if getattr(sys, "frozen", False):
+        # 打包环境 - 创建特殊控制台处理
+        if sys.platform == "win32":
+            # Windows 打包环境特殊处理
+            try:
+                # 尝试附加到父控制台（如果存在）
+                import ctypes
+
+                kernel32 = ctypes.WinDLL("kernel32")
+                if kernel32.GetConsoleWindow():
+                    console_handler = logging.StreamHandler(sys.stdout)
+                    console_handler.setFormatter(formatter)
+                    logger.addHandler(console_handler)
+            except:
+                pass
+    else:
+        # 开发环境 - 标准控制台输出
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+
+    logger.info("=" * 50)
+    logger.info(f"应用启动 - 日志文件: {log_file}")
+    logger.info(f"Python 版本: {sys.version}")
+    logger.info(f"系统平台: {sys.platform}")
+    logger.info(f"工作目录: {os.getcwd()}")
+    logger.info(f"可执行路径: {sys.executable}")
+    logger.info("=" * 50)
+
+    return log_file
+
+
+LOG_FILE = setup_logging()
 
 
 def get_base_path():
@@ -49,31 +87,39 @@ def get_base_path():
 
 
 def get_resource_path(relative_path):
-    """
-    获取资源的绝对路径（兼容打包环境）
-    打包后资源位于 sys._MEIPASS 指向的临时目录
-    """
+    """获取资源的绝对路径（兼容打包环境）"""
     try:
         # PyInstaller/Nuitka 打包后的临时目录
-        base_path = get_base_path()
+        base_path = sys._MEIPASS
+        logging.info(f"检测到打包环境，资源基路径: {base_path}")
     except AttributeError:
         # 开发环境使用当前目录
         base_path = os.path.abspath(".")
+        logging.info(f"开发环境，资源基路径: {base_path}")
 
     path = os.path.join(base_path, relative_path)
-    logging.debug("资源路径解析: %s => %s", relative_path, path)
+    logging.info(f"资源路径解析: {relative_path} -> {path}")
     return path
 
 
 def create_flask_app():
     """创建并配置Flask服务器"""
     app = Flask(__name__, static_folder=None)
-
+    Swagger(app)
+    app.register_blueprint(file_bp)
+    app.register_blueprint(sys_bp)
     # 前端静态文件目录
     frontend_dist = get_resource_path("dist")
+    logging.info(f"前端静态文件目录: {frontend_dist}")
+
+    # 验证前端文件是否存在
+    index_path = os.path.join(frontend_dist, "index.html")
+    if not os.path.exists(index_path):
+        logging.error(f"index.html 不存在: {index_path}")
 
     @app.route("/", defaults={"path": ""})
     @app.route("/<path:path>")
+    @swag_from("index.yml")
     def serve_frontend(path):
         """服务前端文件"""
         if not path or path == "index.html":
@@ -96,12 +142,13 @@ def start_flask_server(app, port):
 
     def run_server():
         logging.info("启动Flask服务器，端口: %s", port)
-        if DEBUG_MODE:
-            # 调试模式使用Flask自带服务器
-            app.run(port=port, debug=False, use_reloader=False)
-        else:
-            # 生产环境使用waitress
-            waitress.serve(app, port=port, threads=4)
+        try:
+            if DEBUG_MODE:
+                app.run(port=port, debug=False, use_reloader=False)
+            else:
+                waitress.serve(app, port=port, threads=4)
+        except Exception as e:
+            logging.exception(f"服务器启动失败: {str(e)}")
 
     server_thread = threading.Thread(target=run_server, daemon=True)
     server_thread.start()
@@ -115,7 +162,7 @@ def check_webview_ready(window, timeout=30):
     :param timeout: 超时时间（秒）
     """
     start_time = time.time()
-    while not window.loaded:
+    while not window.events.loaded:
         elapsed = time.time() - start_time
         if elapsed > timeout:
             logging.error("WebView初始化超时 (%s秒)", timeout)
@@ -126,9 +173,58 @@ def check_webview_ready(window, timeout=30):
     return True
 
 
+def create_window():
+    """创建WebView窗口"""
+    # 根据环境确定URL
+    if DEBUG_MODE:
+        url = "http://localhost:5173"
+        logging.info("开发模式: 使用Vite开发服务器")
+    else:
+        url = f"http://localhost:{PORT}"
+        logging.info(f"生产模式: 使用本地服务器端口 {PORT}")
+
+    logging.info(f"创建WebView窗口，URL: {url}")
+
+    window = webview.create_window(
+        title=APP_NAME,
+        url=url,
+        width=1200,
+        height=800,
+        min_size=(800, 600),
+        text_select=True,
+        confirm_close=True,
+    )
+
+    # 添加加载事件
+    def on_loaded():
+        logging.info("WebView窗口加载完成")
+
+    window.events.loaded += on_loaded
+    return window
+
+
+def start_webview():
+    """启动WebView"""
+    logging.info(f"启动WebView，使用引擎: {GUI_ENGINE}")
+
+    try:
+        webview.start(debug=DEBUG_MODE, gui=GUI_ENGINE)
+    except Exception as e:
+        logging.error(f"引擎 {GUI_ENGINE} 失败: {str(e)}")
+        # 尝试备选引擎
+        fallback_engines = ["cef", "mshtml", "qt"]
+        for engine in fallback_engines:
+            try:
+                logging.info(f"尝试备选引擎: {engine}")
+                webview.start(debug=DEBUG_MODE, gui=engine)
+                break
+            except Exception:
+                continue
+
+
 def main():
     """主应用逻辑"""
-    # setup_logging()
+    setup_logging()
 
     # 1. 创建并启动Flask服务器
     flask_app = create_flask_app()
@@ -139,24 +235,10 @@ def main():
         url = f"http://localhost:{PORT}" if not DEBUG_MODE else "http://localhost:5173"
         logging.info("创建WebView窗口，URL: %s", url)
 
-        window = webview.create_window(
-            title=APP_NAME,
-            url=url,
-            width=1200,
-            height=800,
-            min_size=(800, 600),
-            text_select=True,
-            confirm_close=True,
-        )
+        window = create_window()
 
-        # 3. 启动WebView
-        logging.info("启动WebView，使用引擎: %s", GUI_ENGINE)
-        webview.start(
-            func=lambda: check_webview_ready(window),
-            gui=GUI_ENGINE,
-            debug=DEBUG_MODE,
-            http_server=True,
-        )
+        # 4. 启动WebView
+        start_webview()
     # pylint: disable=broad-exception-caught
     except Exception as e:
         logging.exception("应用启动失败")
