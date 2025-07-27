@@ -1,0 +1,42 @@
+[project]
+dependencies = [
+  "fastapi>=0.110.0",
+  "uvicorn>=0.27.0",
+  "pywebview>=4.0",
+  "psutil>=7.0.0",
+  "nuitka>=2.7.12",
+]
+description = "Add your description here"
+name = "tool-oxr"
+readme = "README.md"
+requires-python = ">=3.11"
+version = "0.1.0"
+
+[project.optional-dependencies]
+dev = [
+  "black>=23.1.0",
+  "isort>=5.12.0",
+  "mypy>=1.5.1",
+]
+
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling", "uv"]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.isort]
+line_length = 88
+profile = "black"
+
+# 关键修复：包位置配置
+[tool.hatch.build]
+packages = ["src/tool_oxr"] # 使用下划线而非连字符
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tool_oxr"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/tool_oxr/*"]

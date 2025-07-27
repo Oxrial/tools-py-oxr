@@ -1,0 +1,29 @@
+{
+	"name": "tools-oxr",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"@vueuse/core": "^13.1.0",
+		"element-plus": "^2.9.7",
+		"lodash-es": "^4.17.21",
+		"normalize.css": "^8.0.1",
+		"path-browserify": "^1.0.1",
+		"vue": "^3.5.13",
+		"vue-draggable-plus": "^0.6.0"
+	},
+	"devDependencies": {
+		"@types/node": "^24.1.0",
+		"@vitejs/plugin-vue": "^5.2.1",
+		"sass": "^1.86.3",
+		"unplugin-auto-import": "^19.1.2",
+		"unplugin-vue-components": "^28.5.0",
+		"unplugin-vue-define-options": "3.0.0-beta.17",
+		"vite": "^6.0.3"
+	}
+}
