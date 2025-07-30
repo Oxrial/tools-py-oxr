@@ -43,3 +43,5 @@ release/
 # 操作系统文件
 ehthumbs.db
 Desktop.ini
+
+pnpm-lock.yaml

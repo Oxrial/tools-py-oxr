@@ -1,6 +1,8 @@
 import axios from 'axios'
 import { MessageBox, Message } from 'element-ui'
 import qs from 'qs'
+import { useLoadingStore } from '@/store'
+const loadingStore = useLoadingStore()
 // create an axios instance
 const service = axios.create({
 	baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
@@ -14,27 +16,85 @@ const service = axios.create({
 service.interceptors.request.use(
 	(config) => {
 		// do something before request is sent
-		config.loading && store.dispatch('setLoading', true)
-		if (!whiteList.includes(config.url)) {
-			if (getToken()) {
-				config.headers['Authorization'] = `Bearer ${getToken()}`
-			}
-		}
-		// if (store.getters.token) {
-
-		//   // let each request carry token
-		//   // ['X-Token'] is a custom headers key
-		//   // please modify it according to the actual situation
-		//   config.headers['X-Token'] = getToken();
-		// }
-		// if(config.data.indexOf('reqJson')>-1){
-		//   config.baseURL = "";
+		config.loading && loadingStore.setLoading(true)
+		// if (!whiteList.includes(config.url)) {
+		// 	if (getToken()) {
+		// 		config.headers['Authorization'] = `Bearer ${getToken()}`
+		// 	}
 		// }
 		return config
 	},
 	(error) => {
-		// do something with request error
 		console.log(error) // for debug
 		return Promise.reject(error)
 	}
 )
+const check = (res) => {
+	if (res.state === '0') {
+		Message({ message: res.message || 'No Data', type: 'info', duration: 5 * 1000 })
+	} else if (res.strState !== '1') {
+		Message({ message: res.message || 'ERROR', type: 'error', duration: 5 * 1000 })
+	}
+}
+// response interceptor
+service.interceptors.response.use(
+	(response) => {
+		const res = response.data
+		response.config.loading && store.dispatch('setLoading', false)
+		if (res instanceof Blob) {
+			if (response.headers['content-type'] === 'application/json') {
+				const reader = new FileReader()
+				reader.readAsText(res, 'utf-8')
+				reader.onload = function () {
+					check(JSON.parse(reader.result))
+				}
+			}
+		} else {
+			check(res)
+		}
+		return res
+	},
+	(error) => {
+		if (error.response && error.response.status === 401) {
+			singleMsg(error.config.url)
+		} else {
+			Message({
+				message: error.message,
+				type: 'error',
+				duration: 5 * 1000
+			})
+		}
+		error.loading && loadingStore.setLoading(false)
+		console.log('err' + error) // for debug
+		return Promise.reject(error)
+	}
+)
+
+// 统一params传参，与Content-Type无关
+export const get = (url, params = {}, loading, restConfig) =>
+	service({ method: 'get', url, params, loading, ...restConfig })
+// json - post
+export const post = (url, data = {}, loading, restConfig) =>
+	service({ method: 'post', url, data, loading, ...restConfig })
+// formdata - post
+const formDataService = (url, data = {}, restConfig) =>
+	service({
+		url,
+		data: qs.stringify(data),
+		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+		...restConfig
+	})
+export const fpost = (url, data = {}, loading, restConfig) =>
+	formDataService(url, data, { method: 'post', loading, ...restConfig })
+// formdata - post - multipart
+export const uploadPost = (url, formData, loading, restConfig) =>
+	service({
+		method: 'post',
+		url,
+		data: formData,
+		loading,
+		headers: {
+			'Content-Type': 'multipart/form-data' // 可省略，浏览器自动设置
+		},
+		...restConfig
+	})
