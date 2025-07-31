@@ -1,11 +1,9 @@
 import axios from 'axios'
-import { MessageBox, Message } from 'element-ui'
+import { ElMessage, ElLoading } from 'element-plus'
 import qs from 'qs'
-import { useLoadingStore } from '@/store'
-const loadingStore = useLoadingStore()
 // create an axios instance
 const service = axios.create({
-	baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
+	baseURL: import.meta.env.VUE_APP_BASE_API, // url = base url + request url
 	// withCredentials: true, // send cookies when cross-domain requests
 	timeout: 5000, // request timeout,
 	headers: {
@@ -16,7 +14,7 @@ const service = axios.create({
 service.interceptors.request.use(
 	(config) => {
 		// do something before request is sent
-		config.loading && loadingStore.setLoading(true)
+		config.loading && ElLoading.service({ fullscreen: true })
 		// if (!whiteList.includes(config.url)) {
 		// 	if (getToken()) {
 		// 		config.headers['Authorization'] = `Bearer ${getToken()}`
@@ -31,16 +29,16 @@ service.interceptors.request.use(
 )
 const check = (res) => {
 	if (res.state === '0') {
-		Message({ message: res.message || 'No Data', type: 'info', duration: 5 * 1000 })
+		ElMessage({ message: res.message || 'No Data', type: 'info', duration: 5 * 1000 })
 	} else if (res.strState !== '1') {
-		Message({ message: res.message || 'ERROR', type: 'error', duration: 5 * 1000 })
+		ElMessage({ message: res.message || 'ERROR', type: 'error', duration: 5 * 1000 })
 	}
 }
 // response interceptor
 service.interceptors.response.use(
 	(response) => {
 		const res = response.data
-		response.config.loading && store.dispatch('setLoading', false)
+		response.config.loading && ElLoading.service({ fullscreen: false })
 		if (res instanceof Blob) {
 			if (response.headers['content-type'] === 'application/json') {
 				const reader = new FileReader()
@@ -64,7 +62,7 @@ service.interceptors.response.use(
 				duration: 5 * 1000
 			})
 		}
-		error.loading && loadingStore.setLoading(false)
+		error.loading && ElLoading.service({ fullscreen: false })
 		console.log('err' + error) // for debug
 		return Promise.reject(error)
 	}
@@ -98,3 +96,9 @@ export const uploadPost = (url, formData, loading, restConfig) =>
 		},
 		...restConfig
 	})
+export default {
+	1: get,
+	2: post,
+	21: fpost,
+	22: uploadPost
+}

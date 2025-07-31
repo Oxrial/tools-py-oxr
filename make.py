@@ -42,46 +42,39 @@ def install_dev():
 
     if success and not venv_dir.exists():
         print("创建 Python 虚拟环境...")
-        wrapper = run_command(
-            ["uv", "venv", ".venv"],
-            cwd=BACKEND_DIR,
-            name="虚拟环境",
-            realtime_output=True,
-        )
-        if wrapper is None:
+        try:
+            subprocess.run(
+                ["uv", "venv", ".venv"],
+                cwd=BACKEND_DIR,
+                stdout=sys.stdout,  # 直接输出到控制台
+                stderr=sys.stderr,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(f"虚拟环境创建失败: {e}")
             success = False
-        else:
-            # 等待创建完成
-            while wrapper.exit_code is None:
-                time.sleep(0.5)
-            if wrapper.exit_code != 0:
-                success = False
     else:
         print("Python 虚拟环境已存在，跳过创建")
 
     # 后端依赖安装
     if success:
         print("安装 Python 依赖...")
-        wrapper = run_command(
-            ["uv", "pip", "install", "-e", "."],
-            cwd=BACKEND_DIR,
-            name="后端依赖",
-            realtime_output=True,
-        )
-        if wrapper is None:
+        try:
+            subprocess.run(
+                ["uv", "pip", "install", "-e", "."],
+                cwd=BACKEND_DIR,
+                stdout=sys.stdout,  # 直接输出到控制台
+                stderr=sys.stderr,
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print(f"依赖安装失败: {e}")
             success = False
-        else:
-            # 等待安装完成
-            while wrapper.exit_code is None:
-                time.sleep(0.5)
-            if wrapper.exit_code != 0:
-                success = False
 
     if success:
         print("开发依赖安装完成")
     else:
         print("开发依赖安装失败")
-
     return success
 
 

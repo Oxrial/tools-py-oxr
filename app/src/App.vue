@@ -43,7 +43,8 @@
 <script setup>
 import { ref, watch, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
-import { getColumnWidth } from './index'
+import { getColumnWidth } from '@/util'
+import apis from '@/util/api'
 import { join } from 'path-browserify'
 import { useDark, useToggle } from '@vueuse/core'
 
@@ -58,7 +59,7 @@ const sortedFiles = ref([])
 const disabledScan = ref(false)
 const selectFolder = async () => {
 	try {
-		folderPath.value = await invoke('select_folder')
+		folderPath.value = await apis.selectFolder()
 		// scanFlvFiles(folderPath.value)
 	} catch (error) {
 		alert(`Error: ${error}`)
@@ -66,7 +67,7 @@ const selectFolder = async () => {
 }
 const scanFlvFiles = async (folder) => {
 	if (disabledScan.value || !folder.length) return
-	files.value = await invoke('scan_flv_files', { path: folder })
+	files.value = await apis.scanFiles({ path: folder })
 	sortedFiles.value.splice(
 		0,
 		sortedFiles.value.length,
@@ -96,7 +97,7 @@ watchEffect(() => {
 const submit = computed(() => sortedFiles.value.filter((s) => !s.delete).map((s) => s.id))
 const confirmAndMerge = async () => {
 	try {
-		await invoke('generate_filelist_and_merge', {
+		await apis.creatFilelistForMerge({
 			files: submit.value,
 			folderPath: folderPath.value,
 			fileName: fileName.value

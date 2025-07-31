@@ -1,3 +1,15 @@
+const typesof = (type) => {
+	let typeList = {}
+	;['Boolean', 'Number', 'String', 'Function', 'Array', 'Date', 'RegExp', 'Object', 'Error', 'Symbol'].forEach(
+		(item) => (typeList[`[object ${item}]`] = item.toLowerCase())
+	)
+	if (type == null) return type + ''
+	if (typeof type === 'object' || typeof type === 'function') {
+		return typeList[toString.call(type)] || 'object'
+	} else {
+		return typeof type
+	}
+}
 /**
  * 表格列宽自适应
  * @param prop 属性
@@ -34,4 +46,4 @@ const getTextWidth = (text) => {
 	document.body.removeChild(span)
 	return width
 }
-export { getColumnWidth }
+export { getColumnWidth, typesof }
