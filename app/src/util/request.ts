@@ -1,9 +1,17 @@
-import axios from 'axios'
+import axios, { type AxiosRequestConfig } from 'axios'
 import { ElMessage, ElLoading } from 'element-plus'
+import type { LoadingInstance } from 'element-plus/es/components/loading/src/loading.mjs'
 import qs from 'qs'
+
+declare global {
+	interface Window {
+		loading?: LoadingInstance
+	}
+}
+console.log(import.meta.env)
 // create an axios instance
 const service = axios.create({
-	baseURL: import.meta.env.VUE_APP_BASE_API, // url = base url + request url
+	baseURL: import.meta.env.VITE_APP_BASE_API, // url = base url + request url
 	// withCredentials: true, // send cookies when cross-domain requests
 	timeout: 5000, // request timeout,
 	headers: {
@@ -13,13 +21,7 @@ const service = axios.create({
 // request interceptor
 service.interceptors.request.use(
 	(config) => {
-		// do something before request is sent
-		config.loading && ElLoading.service({ fullscreen: true })
-		// if (!whiteList.includes(config.url)) {
-		// 	if (getToken()) {
-		// 		config.headers['Authorization'] = `Bearer ${getToken()}`
-		// 	}
-		// }
+		;(config as any).loading && (window.loading = ElLoading.service({ fullscreen: true }))
 		return config
 	},
 	(error) => {
@@ -27,10 +29,10 @@ service.interceptors.request.use(
 		return Promise.reject(error)
 	}
 )
-const check = (res) => {
+const check = (res: { state: string; message: any }) => {
 	if (res.state === '0') {
 		ElMessage({ message: res.message || 'No Data', type: 'info', duration: 5 * 1000 })
-	} else if (res.strState !== '1') {
+	} else if (res.state !== '1') {
 		ElMessage({ message: res.message || 'ERROR', type: 'error', duration: 5 * 1000 })
 	}
 }
@@ -38,13 +40,15 @@ const check = (res) => {
 service.interceptors.response.use(
 	(response) => {
 		const res = response.data
-		response.config.loading && ElLoading.service({ fullscreen: false })
+		window.loading?.close()
 		if (res instanceof Blob) {
 			if (response.headers['content-type'] === 'application/json') {
 				const reader = new FileReader()
 				reader.readAsText(res, 'utf-8')
 				reader.onload = function () {
-					check(JSON.parse(reader.result))
+					if (typeof reader.result === 'string') {
+						check(JSON.parse(reader.result))
+					}
 				}
 			}
 		} else {
@@ -54,51 +58,52 @@ service.interceptors.response.use(
 	},
 	(error) => {
 		if (error.response && error.response.status === 401) {
-			singleMsg(error.config.url)
+			// singleMsg(error.config.url)
 		} else {
-			Message({
+			ElMessage({
 				message: error.message,
 				type: 'error',
 				duration: 5 * 1000
 			})
 		}
-		error.loading && ElLoading.service({ fullscreen: false })
-		console.log('err' + error) // for debug
-		return Promise.reject(error)
+		window.loading?.close()
+		console.log('err ' + error) // for debug
 	}
 )
 
 // 统一params传参，与Content-Type无关
-export const get = (url, params = {}, loading, restConfig) =>
-	service({ method: 'get', url, params, loading, ...restConfig })
+export const get = (url: string, params = {}, loading?: boolean, restConfig?: AxiosRequestConfig<any>) =>
+	service({ method: 'get', url, params, ...(loading !== undefined ? { loading } : {}), ...restConfig })
 // json - post
-export const post = (url, data = {}, loading, restConfig) =>
-	service({ method: 'post', url, data, loading, ...restConfig })
+export const post = (url: string, data = {}, loading?: boolean, restConfig?: AxiosRequestConfig<any>) =>
+	service({ method: 'post', url, data, ...(loading !== undefined ? { loading } : {}), ...restConfig })
 // formdata - post
-const formDataService = (url, data = {}, restConfig) =>
+const formDataService = (url: string, data = {}, restConfig: AxiosRequestConfig<any>) =>
 	service({
 		url,
 		data: qs.stringify(data),
 		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 		...restConfig
 	})
-export const fpost = (url, data = {}, loading, restConfig) =>
-	formDataService(url, data, { method: 'post', loading, ...restConfig })
+export const fpost = (url: string, data = {}, loading?: boolean, restConfig?: any) =>
+	formDataService(url, data, { method: 'post', ...(loading !== undefined ? { loading } : {}), ...restConfig })
 // formdata - post - multipart
-export const uploadPost = (url, formData, loading, restConfig) =>
+export const uploadPost = (url: string, formData: any, loading?: boolean, restConfig?: AxiosRequestConfig<any>) =>
 	service({
 		method: 'post',
 		url,
 		data: formData,
-		loading,
+		...(loading !== undefined ? { loading } : {}),
 		headers: {
 			'Content-Type': 'multipart/form-data' // 可省略，浏览器自动设置
 		},
 		...restConfig
 	})
-export default {
+const req = {
 	1: get,
 	2: post,
 	21: fpost,
 	22: uploadPost
 }
+export type Req = typeof req
+export default req

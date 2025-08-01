@@ -1,9 +1,9 @@
 {
+	"files": [],
 	"compilerOptions": {
-		"types": ["vite/client", "unplugin-vue-define-options"]
+		"typeRoots": ["./node_modules/@types/", "./node_modules", "./types"],
+		"types": ["vite/client"]
 	},
-	"vueCompilerOptions": {
-		"globalTypesPath": "./types/global.d.ts"
-	},
-	"include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"]
+	"vueCompilerOptions": { "globalTypesPath": "./src/types/global.d.ts" },
+	"references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
 }

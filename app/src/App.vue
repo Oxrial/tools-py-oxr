@@ -45,6 +45,7 @@ import { ref, watch, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { getColumnWidth } from '@/util'
 import apis from '@/util/api'
+console.log('🚀 ~ file: App.vue ~ line 1 ~ apis:', apis)
 import { join } from 'path-browserify'
 import { useDark, useToggle } from '@vueuse/core'
 
@@ -58,12 +59,8 @@ const files = ref([])
 const sortedFiles = ref([])
 const disabledScan = ref(false)
 const selectFolder = async () => {
-	try {
-		folderPath.value = await apis.selectFolder()
-		// scanFlvFiles(folderPath.value)
-	} catch (error) {
-		alert(`Error: ${error}`)
-	}
+	folderPath.value = await apis.selectFolder().then((res) => {})
+	// scanFlvFiles(folderPath.value)
 }
 const scanFlvFiles = async (folder) => {
 	if (disabledScan.value || !folder.length) return
@@ -102,9 +99,9 @@ const confirmAndMerge = async () => {
 			folderPath: folderPath.value,
 			fileName: fileName.value
 		})
-		alert('视频合并完成！')
+		ElMessage({ message: '视频合并完成！', type: 'success' })
 	} catch (error) {
-		alert(`Error: ${error}`)
+		ElMessage({ message: `Error: ${error}`, type: 'error' })
 	}
 }
 </script>
