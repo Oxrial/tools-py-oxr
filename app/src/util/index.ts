@@ -1,5 +1,5 @@
-const typesof = (type) => {
-	let typeList = {}
+const typesof = (type: string) => {
+	let typeList = {} as Record<string, string>
 	;['Boolean', 'Number', 'String', 'Function', 'Array', 'Date', 'RegExp', 'Object', 'Error', 'Symbol'].forEach(
 		(item) => (typeList[`[object ${item}]`] = item.toLowerCase())
 	)
@@ -16,10 +16,10 @@ const typesof = (type) => {
  * @param records 数据
  * @param minWidth 最小宽度
  */
-const getColumnWidth = (prop, records, minWidth = 80) => {
+const getColumnWidth = (prop: string | number, records: any[], minWidth = 80) => {
 	const padding = 12 // 列内边距
 
-	const contentWidths = records.map((item) => {
+	const contentWidths = records.map((item: { [x: string]: any }) => {
 		const value = item[prop] ? String(item[prop]) : ''
 		const textWidth = getTextWidth(value)
 		return textWidth + padding
@@ -33,7 +33,7 @@ const getColumnWidth = (prop, records, minWidth = 80) => {
  * @param {*} text 文本内容
  * @returns 文本宽度(int)
  */
-const getTextWidth = (text) => {
+const getTextWidth = (text: string) => {
 	const span = document.createElement('span')
 	span.style.visibility = 'hidden'
 	span.style.position = 'absolute'
@@ -47,3 +47,6 @@ const getTextWidth = (text) => {
 	return width
 }
 export { getColumnWidth, typesof }
+export const hump2Bar = (value: string) => {
+	return value.replace(/(A-Z)g/, '-$1').toLocaleLowerCase()
+}

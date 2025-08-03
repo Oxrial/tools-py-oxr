@@ -8,7 +8,6 @@ declare global {
 		loading?: LoadingInstance
 	}
 }
-console.log(import.meta.env)
 // create an axios instance
 const service = axios.create({
 	baseURL: import.meta.env.VITE_APP_BASE_API, // url = base url + request url
@@ -29,10 +28,10 @@ service.interceptors.request.use(
 		return Promise.reject(error)
 	}
 )
-const check = (res: { state: string; message: any }) => {
-	if (res.state === '0') {
+const check = (res: { status: number; message: any }) => {
+	if (res.status === 0) {
 		ElMessage({ message: res.message || 'No Data', type: 'info', duration: 5 * 1000 })
-	} else if (res.state !== '1') {
+	} else if (res.status !== 1) {
 		ElMessage({ message: res.message || 'ERROR', type: 'error', duration: 5 * 1000 })
 	}
 }

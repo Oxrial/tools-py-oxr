@@ -1,10 +1,12 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+import vueJsx from '@vitejs/plugin-vue-jsx'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import http from 'http'
+import setupExtend from 'vite-plugin-vue-setup-extend'
 
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
@@ -41,8 +43,9 @@ export default defineConfig(() => ({
 	},
 	plugins: [
 		vue(),
+		vueJsx(),
 		AutoImport({
-			imports: ['vue'],
+			imports: ['vue', 'vue-router', 'pinia'],
 			dts: 'src/types/auto-import.d.ts',
 			resolvers: [ElementPlusResolver()]
 		}),
@@ -50,8 +53,18 @@ export default defineConfig(() => ({
 			include: [/\.vue$/, /\.vue\?vue/, /\?vue/, /\.tsx$/],
 			dts: 'src/types/components.d.ts',
 			resolvers: [ElementPlusResolver()]
-		})
+		}),
+		setupExtend()
 	],
+	css: {
+		preprocessorOptions: {
+			scss: {
+				additionalData: `
+					@use "@/layout/theme/variable.scss" as *;`,
+				silenceDeprecations: ['legacy-js-api']
+			}
+		}
+	},
 	clearScreen: false,
 	build: {
 		/** 单个 chunk 文件的大小超过 2048KB 时发出警告 */
@@ -63,8 +76,8 @@ export default defineConfig(() => ({
 		rollupOptions: {
 			output: {
 				manualChunks: {
-					vue: ['vue'],
-					element: ['element-plus']
+					vue: ['vue', 'vue-router', 'pinia'],
+					element: ['element-plus', '@element-plus/icons-vue']
 				}
 			}
 		}

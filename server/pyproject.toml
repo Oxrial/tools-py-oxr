@@ -5,6 +5,9 @@ dependencies = [
   "pywebview>=4.0",
   "psutil>=7.0.0",
   "nuitka>=2.7.12",
+  "python-multipart>=0.0.20",
+  "sqlalchemy>=2.0.42",
+  "aiosqlite>=0.21.0",
 ]
 description = "Add your description here"
 name = "tool-oxr"

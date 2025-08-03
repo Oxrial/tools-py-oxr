@@ -4,6 +4,6 @@
 		"typeRoots": ["./node_modules/@types/", "./node_modules", "./types"],
 		"types": ["vite/client"]
 	},
-	"vueCompilerOptions": { "globalTypesPath": "./src/types/global.d.ts" },
+	"vueCompilerOptions": { "globalTypesPath": "./src/types/auto-import.d.ts" },
 	"references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
 }
