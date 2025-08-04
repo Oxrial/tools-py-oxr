@@ -13,7 +13,7 @@
 }
 .el-menu-vertical-demo {
 	border-right: unset;
-	min-height: calc(100vh - 60px);
+	min-height: calc(100vh - 120px);
 
 	&:not(.el-menu--collapse) {
 		width: theme(aside_width);
@@ -43,4 +43,16 @@
 }
 .logoTransition-leave-to {
 	width: 64px;
+}
+.el-menu,
+.el-menu-item,
+.el-sub-menu,
+.el-sub-menu__title {
+	background-color: transparent;
+	--el-menu-level: 0;
+	--el-menu-active-color: var(--el-color-primary) !important;
+	--el-menu-text-color: var(--el-text-color-primary) !important;
+	--el-menu-hover-text-color: var(--el-color-primary) !important;
+	--el-menu-bg-color: var(--el-fill-color-blank) !important;
+	--el-menu-hover-bg-color: var(--el-color-primary-light-9) !important;
 }

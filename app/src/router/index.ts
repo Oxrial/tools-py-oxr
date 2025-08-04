@@ -35,6 +35,19 @@ export const routes: Array<RouteRecordRaw> = [
 				component: () => import('@/view/home/index.vue')
 			}
 		]
+	},
+	{
+		path: '/config',
+		component: Layout,
+		redirect: '/config/index',
+		meta: { title: '配置', icon: 'el-icon-operation', type: 'sub' },
+		children: [
+			{
+				path: 'index',
+				component: () => import('@/view/config/index.vue'),
+				meta: { title: '配置', icon: 'el-icon-operation' }
+			}
+		]
 	}
 ]
 const recursionRoutesArr = (routesArrTemp: Array<RouteRecordRaw>, parentsPath: string = '') => {

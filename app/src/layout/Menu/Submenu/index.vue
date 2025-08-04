@@ -2,9 +2,7 @@
 	<template v-for="menu in menuData">
 		<template v-if="!menu.meta?.notLayout">
 			<template v-if="menu.meta?.type === 'sub'">
-				<el-sub-menu
-					:index="(parentsPath ? parentsPath + '/' : '') + menu.path"
-				>
+				<el-sub-menu :index="(parentsPath ? parentsPath + '/' : '') + menu.path">
 					<template #title>
 						<menu-title :menu="menu" />
 					</template>

@@ -27,7 +27,7 @@
 import 'animate.css'
 import Menu from './Menu/index.vue'
 
-const isCollapse = ref(false)
+const isCollapse = ref(true)
 </script>
 <style scoped lang="scss">
 @import './index.scss';

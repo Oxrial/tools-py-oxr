@@ -4,12 +4,13 @@ import 'normalize.css/normalize.css'
 import 'element-plus/theme-chalk/index.css' // if you just want to import css
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import { createPinia } from 'pinia'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import * as Icons from '@element-plus/icons-vue'
 import { hump2Bar } from '@/util'
 import router from './router'
 
 const pinia = createPinia()
-// pinia.use(store)
+pinia.use(piniaPluginPersistedstate)
 
 const app = createApp(AppView)
 // 使图标像普通svg图片使用，全局注册为组件形式

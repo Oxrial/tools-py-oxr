@@ -2,7 +2,7 @@
 	<div class="main">
 		<div class="nav-bar">
 			<span>Tools-OXR</span>
-			<span class="theme">白<ElSwitch v-model="theme" @click="() => toggleDark()" />黑</span>
+			<span class="theme">白<ElSwitch @click="() => toggleDark()" />黑</span>
 		</div>
 		<div class="operation-bar">
 			<ElButton @click="selectFolder" type="primary" plain> 选择文件夹 </ElButton>
@@ -61,11 +61,9 @@ import { VueDraggable } from 'vue-draggable-plus'
 import { getColumnWidth } from '@/util'
 import apis from '@/util/api'
 import { join } from 'path-browserify'
-import { useDark, useToggle } from '@vueuse/core'
-
-const theme = ref(false)
-const isDark = useDark()
-const toggleDark = useToggle(isDark)
+import { useDarkModeStore } from '@/store'
+const { isDark, toggleDark } = useDarkModeStore()
+// const theme = ref(false)
 
 const folderPath = ref('')
 const fileName = ref('')
