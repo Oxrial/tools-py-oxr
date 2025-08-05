@@ -20,22 +20,18 @@ def install_dev():
     success = True
 
     # 前端依赖
-    if not (FRONTEND_DIR / "node_modules").exists():
-        print("安装前端依赖...")
-        try:
-            # 直接执行命令，不通过 run_command
-            subprocess.run(
-                [get_pnpm_path(), "install"],
-                cwd=FRONTEND_DIR,
-                stdout=sys.stdout,  # 直接输出到控制台
-                stderr=sys.stderr,
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            print(f"前端安装失败: {e}")
-            success = False
-    else:
-        print("前端依赖已存在，跳过安装")
+    try:
+        # 直接执行命令，不通过 run_command
+        subprocess.run(
+            [get_pnpm_path(), "install"],
+            cwd=FRONTEND_DIR,
+            stdout=sys.stdout,  # 直接输出到控制台
+            stderr=sys.stderr,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"前端安装失败: {e}")
+        success = False
 
     # 后端依赖
     venv_dir = BACKEND_DIR / ".venv"

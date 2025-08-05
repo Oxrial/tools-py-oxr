@@ -1,7 +1,7 @@
 @import '@/assets/style.module.scss';
 // 父级%占位继承
 %centent-scrollbar {
-	height: calc(100vh - theme(logo_height) - 60px);
+	height: calc(100vh - theme(logo_height) - 120px);
 	:deep(.el-scrollbar__wrap) {
 		height: inherit;
 		.el-scrollbar__view {

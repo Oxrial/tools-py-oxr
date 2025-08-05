@@ -1,4 +1,4 @@
-const typesof = (type: string) => {
+const typesof = (type: any) => {
 	let typeList = {} as Record<string, string>
 	;['Boolean', 'Number', 'String', 'Function', 'Array', 'Date', 'RegExp', 'Object', 'Error', 'Symbol'].forEach(
 		(item) => (typeList[`[object ${item}]`] = item.toLowerCase())

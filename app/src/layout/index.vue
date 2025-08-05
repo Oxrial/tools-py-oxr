@@ -1,6 +1,6 @@
 <template>
 	<el-container>
-		<el-aside width="auto" height="100vh">
+		<el-aside width="auto">
 			<Menu v-model:is-collapse="isCollapse" />
 		</el-aside>
 		<el-container>
@@ -31,4 +31,18 @@ const isCollapse = ref(true)
 </script>
 <style scoped lang="scss">
 @import './index.scss';
+</style>
+<style>
+.el-menu,
+.el-menu-item,
+.el-sub-menu,
+.el-sub-menu__title {
+	background-color: transparent;
+	--el-menu-level: 0;
+	--el-menu-active-color: var(--el-color-primary) !important;
+	--el-menu-text-color: var(--el-text-color-primary) !important;
+	--el-menu-hover-text-color: var(--el-color-primary) !important;
+	--el-menu-bg-color: var(--el-fill-color-blank) !important;
+	--el-menu-hover-bg-color: var(--el-color-primary-light-9) !important;
+}
 </style>

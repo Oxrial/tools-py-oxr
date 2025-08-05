@@ -2,23 +2,23 @@
 	&:deep(.el-sub-menu__title:hover) {
 		// background: skyblue !important;
 		span {
-			color: #fff;
+			// color: #fff;
 		}
 	}
 	&.is-active {
 		.el-sub-menu__title {
 			span {
-				color: #fff;
+				// color: #fff;
 			}
 		}
 	}
 }
 .el-menu-item {
 	&:hover {
-		color: #fff;
+		// color: #fff;
 	}
 	&.is-active {
-		background-color: var(--el-color-primary);
-		color: #fff;
+		// background-color: var(--el-color-primary);
+		// color: #fff;
 	}
 }

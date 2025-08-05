@@ -29,8 +29,8 @@
 
 .el-aside {
 	background-color: theme(aside_theme);
-	height: 100vh;
-	box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.12);
+	height: calc(100vh - 15px);
+	box-shadow: 0px 0px 12px #65646461;
 	border-top-right-radius: 45px;
 	border-bottom-right-radius: 45px;
 	padding: 30px 5px 30px 0;
@@ -45,4 +45,8 @@
 }
 .el-main {
 	height: calc(100vh - theme(logo_height));
+}
+.el-container {
+	height: 100vh;
+	align-items: center;
 }

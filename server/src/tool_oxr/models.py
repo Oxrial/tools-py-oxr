@@ -10,6 +10,6 @@ class ConfParam(Base):
 
 class FfmpegCanmand(Base):
     __tablename__ = "ffmpeg_command"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True)
     command = Column(String, nullable=False)
     description = Column(String, nullable=True)

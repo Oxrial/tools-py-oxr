@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
-from .api import router as api_router
+from .api.index import router as api_router
 from .util import PORTS
 from .db import init_db
 

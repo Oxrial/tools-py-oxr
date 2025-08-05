@@ -1,11 +1,11 @@
 import { camelCase } from 'lodash-es'
 import req, { type Req } from './request'
 import { typesof } from '@/util'
+import apiArr from '@/api'
 
-const apiArr: Array<string | [string, number?]> = ['/select-folder', '/scan-files', ['/create-filelist-merge']]
 const API_NAMES = apiArr
 	.flat()
-	.filter((f) => typesof(f) === 'string')
+	.filter((f: any) => typesof(f) === 'string')
 	.map((f) => camelCase(f as string)) // 去掉前导斜杠
 
 type ApiName = (typeof API_NAMES)[number]
