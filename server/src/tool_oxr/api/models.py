@@ -1,5 +1,6 @@
-from .db import Base
 from sqlalchemy import Column, Integer, String
+
+from ..db import Base
 
 
 class ConfParam(Base):

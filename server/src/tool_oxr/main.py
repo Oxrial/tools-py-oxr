@@ -1,20 +1,20 @@
+import multiprocessing
 import sys
 import threading
-import multiprocessing
 import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import uvicorn
 import webview
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from contextlib import asynccontextmanager
 
-from .api.index import router as api_router
-from .util import PORTS
 from .db import init_db
+from .util import PORTS
+from .util import router as api_router
 
 
 def get_resource_path(relative_path):

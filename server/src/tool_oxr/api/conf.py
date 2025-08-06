@@ -1,9 +1,10 @@
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from ..db import get_db
-from ..models import ConfParam
-from .index import router, wrap_response
+from ..util import router, wrap_response
+from .models import ConfParam
 
 
 async def select_conf_param(key: str, session: AsyncSession = Depends(get_db)):
@@ -13,17 +14,28 @@ async def select_conf_param(key: str, session: AsyncSession = Depends(get_db)):
     return param.pvalue if param else None
 
 
+@router.post("/insert-conf-param")
 async def insert_conf_param(
-    key: str, value: str, session: AsyncSession = Depends(get_db)
-):
-    """插入或更新配置参数"""
-    param = await session.execute(select(ConfParam).where(ConfParam.pkey == key))
-    param = param.scalars().first()
-    if param:
-        param.pvalue = value
-    else:
-        new_param = ConfParam(pkey=key, pvalue=value)
-        session.add(new_param)
-    await session.commit()
-
-    return wrap_response(message="配置参数已保存")
+    conf: ConfParam, session: AsyncSession = Depends(get_db)
+) -> dict:
+    """
+    插入或更新配置参数
+    """
+    try:
+        result = await session.execute(
+            select(ConfParam).where(ConfParam.pkey == conf.pkey)
+        )
+        param = result.scalars().first()
+        if param:
+            param.pvalue = conf.pvalue
+        else:
+            param = ConfParam(pkey=conf.pkey, pvalue=conf.pvalue)
+            session.add(param)
+        await session.commit()
+        if not param:
+            await session.refresh(param)
+        return wrap_response(message="配置参数已保存")
+    except Exception as e:
+        await session.rollback()
+        # 可选：记录日志 logger.error(f"插入配置参数失败: {e}")
+        return wrap_response(message=f"配置参数保存失败: {str(e)}", status=2)
