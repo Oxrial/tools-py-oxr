@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import get_db
 from ..util import router, wrap_response
-from .models import ConfParam
+from .models import ConfParam, ConfParamDto
 
 
 async def select_conf_param(key: str, session: AsyncSession = Depends(get_db)):
@@ -16,7 +16,7 @@ async def select_conf_param(key: str, session: AsyncSession = Depends(get_db)):
 
 @router.post("/insert-conf-param")
 async def insert_conf_param(
-    conf: ConfParam, session: AsyncSession = Depends(get_db)
+    conf: ConfParamDto, session: AsyncSession = Depends(get_db)
 ) -> dict:
     """
     插入或更新配置参数
@@ -37,5 +37,4 @@ async def insert_conf_param(
         return wrap_response(message="配置参数已保存")
     except Exception as e:
         await session.rollback()
-        # 可选：记录日志 logger.error(f"插入配置参数失败: {e}")
         return wrap_response(message=f"配置参数保存失败: {str(e)}", status=2)

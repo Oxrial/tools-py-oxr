@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
 
 from ..db import Base
@@ -9,8 +10,19 @@ class ConfParam(Base):
     pvalue = Column(String)
 
 
+class ConfParamDto(BaseModel):
+    pkey: int
+    pvalue: str
+
+
 class FfmpegCanmand(Base):
     __tablename__ = "ffmpeg_command"
     id = Column(String, primary_key=True, index=True)
     command = Column(String, nullable=False)
     description = Column(String, nullable=True)
+
+
+class FfmpegCanmandDto(BaseModel):
+    id: str
+    command: str
+    description: str

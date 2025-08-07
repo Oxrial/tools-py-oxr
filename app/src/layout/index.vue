@@ -1,9 +1,17 @@
 <template>
 	<el-container>
 		<el-aside width="auto">
-			<Menu v-model:is-collapse="isCollapse" />
+			<div class="aside-main">
+				<Menu v-model:is-collapse="isCollapse" />
+			</div>
 		</el-aside>
 		<el-container>
+			<el-header>
+				<div class="nav-bar">
+					<span>Tools-OXR</span>
+					<span class="theme">白<ElSwitch v-model="theme" @click="() => toggleDark()" />黑</span>
+				</div>
+			</el-header>
 			<el-main>
 				<router-view v-slot="{ Component, route }">
 					<!-- mode:  -->
@@ -26,6 +34,11 @@
 <script setup lang="ts">
 import 'animate.css'
 import Menu from './Menu/index.vue'
+import { useDarkModeStore } from '@/store'
+
+const { isDark, toggleDark } = useDarkModeStore()
+
+const theme = ref(isDark)
 
 const isCollapse = ref(true)
 </script>

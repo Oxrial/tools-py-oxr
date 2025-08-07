@@ -40,12 +40,11 @@ export const routes: Array<RouteRecordRaw> = [
 		path: '/config',
 		component: Layout,
 		redirect: '/config/index',
-		meta: { title: '配置', icon: 'el-icon-operation', type: 'sub' },
+		meta: { title: '配置', icon: 'el-icon-operation' },
 		children: [
 			{
 				path: 'index',
-				component: () => import('@/view/config/index.vue'),
-				meta: { title: '配置', icon: 'el-icon-operation' }
+				component: () => import('@/view/config/index.vue')
 			}
 		]
 	}

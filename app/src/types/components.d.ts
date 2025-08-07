@@ -13,6 +13,7 @@ declare module 'vue' {
     ElButtonGroup: typeof import('element-plus/es')['ElButtonGroup']
     ElCard: typeof import('element-plus/es')['ElCard']
     ElContainer: typeof import('element-plus/es')['ElContainer']
+    ElHeader: typeof import('element-plus/es')['ElHeader']
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElIconExpand: typeof import('@element-plus/icons-vue')['Expand']
     ElIconFold: typeof import('@element-plus/icons-vue')['Fold']

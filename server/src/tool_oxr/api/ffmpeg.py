@@ -10,6 +10,8 @@ async def select_folder():
     """选择文件夹"""
     root = Tk()
     root.withdraw()
+    root.lift()  # 提升窗口层级
+    root.attributes("-topmost", True)  # 置顶
     folder_path = filedialog.askdirectory(title="选择文件夹")
     root.destroy()
     if not folder_path:
@@ -17,15 +19,28 @@ async def select_folder():
     return wrap_response(data={"folder_path": folder_path})
 
 
-@router.get("/scan-files")
+@router.get("/scan-files-for-walk")
 async def scan_files(path):
-    """扫描文件夹中的文件"""
+    """扫描文件夹中的文件（递归）"""
     if not os.path.isdir(path):
         return wrap_response(message="路径不存在或不是文件夹", status=2)
     files = []
     for root, _, filenames in os.walk(path):
         for filename in filenames:
             files.append(os.path.join(root, filename))
+    return wrap_response(data={"files": files})
+
+
+@router.get("/scan-files")
+async def scan_files(path):
+    """扫描当前文件夹中的文件（不递归）"""
+    if not os.path.isdir(path):
+        return wrap_response(message="路径不存在或不是文件夹", status=2)
+    files = []
+    for filename in os.listdir(path):
+        full_path = os.path.join(path, filename)
+        if os.path.isfile(full_path):
+            files.append(full_path.replace("\\", "/"))
     return wrap_response(data={"files": files})
 
 

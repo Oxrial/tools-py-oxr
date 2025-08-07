@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .db import init_db
 from .util import PORTS
-from .util import router as api_router
+from .api import routers
 
 
 def get_resource_path(relative_path):
@@ -50,7 +50,8 @@ app.add_middleware(
 
 
 # 挂载 API 路由
-app.include_router(api_router)
+for router in routers:
+    app.include_router(router)
 
 
 # 异常处理

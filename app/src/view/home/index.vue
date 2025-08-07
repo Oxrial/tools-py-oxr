@@ -1,57 +1,46 @@
 <template>
-	<div class="main">
-		<div class="nav-bar">
-			<span>Tools-OXR</span>
-			<span class="theme">白<ElSwitch @click="() => toggleDark()" />黑</span>
-		</div>
-		<div class="operation-bar">
-			<ElButton @click="selectFolder" type="primary" plain> 选择文件夹 </ElButton>
-			<ElButtonGroup>
-				<ElInput
-					v-model="folderPath"
-					placeholder="键入地址"
-					@focus="() => (disabledScan = true)"
-					@blur="() => (disabledScan = false)"
+	<div class="operation-bar">
+		<ElButton @click="selectFolder" type="primary" plain> 选择文件夹 </ElButton>
+		<ElButtonGroup>
+			<ElInput
+				v-model="folderPath"
+				placeholder="键入地址"
+				@focus="() => (disabledScan = true)"
+				@blur="() => (disabledScan = false)"
+			>
+			</ElInput>
+			<ElInput v-model="fileName" placeholder="文件名" style="width: 30rem"> </ElInput>
+			<ElButton :disabled="!sortedFiles.length" type="success" plain @click="confirmAndMerge"
+				>生成 ({{ submit.length }}/{{ sortedFiles.length }})</ElButton
+			>
+		</ElButtonGroup>
+	</div>
+	<div>
+		<ElCard class="flv-list">
+			<VueDraggable v-model="sortedFiles" ghostClass="ghost" target="tbody" :animation="150">
+				<el-table
+					:data="sortedFiles.filter((f) => f.name.match(new RegExp(ext, 'i')) || f.name.includes(ext))"
+					:cell-class-name="renderCellClass"
+					height="calc(100vh - 12rem)"
 				>
-				</ElInput>
-				<ElInput v-model="fileName" placeholder="文件名" style="width: 30rem"> </ElInput>
-				<ElButton :disabled="!sortedFiles.length" type="success" plain @click="confirmAndMerge"
-					>生成 ({{ submit.length }}/{{ sortedFiles.length }})</ElButton
-				>
-			</ElButtonGroup>
-		</div>
-		<div>
-			<ElCard class="flv-list" v-if="sortedFiles.length">
-				<VueDraggable v-model="sortedFiles" ghostClass="ghost" target="tbody" :animation="150">
-					<el-table
-						:data="sortedFiles.filter((f) => f.name.match(new RegExp(ext, 'i')) || f.name.includes(ext))"
-						:cell-class-name="renderCellClass"
-						height="calc(100vh - 12rem)"
-					>
-						<el-table-column prop="name" :width="getColumnWidth('name', sortedFiles)">
-							<template #header>
-								<el-input v-model="ext" size="small">
-									<template #prepend>文件名(.*)</template>
-								</el-input>
-							</template>
-						</el-table-column>
-						<el-table-column show-overflow-tooltip="" label="全路径" prop="id" />
-						<el-table-column label="操作" width="70">
-							<template #default="scope">
-								<el-button
-									link
-									type="primary"
-									size="small"
-									@click="({ row }) => (row.delete = !row.delete)"
-								>
-									{{ scope.row.delete ? '撤销' : '屏蔽' }}
-								</el-button>
-							</template>
-						</el-table-column>
-					</el-table>
-				</VueDraggable>
-			</ElCard>
-		</div>
+					<el-table-column prop="name" :width="getColumnWidth('name', sortedFiles)">
+						<template #header>
+							<el-input v-model="ext" size="small">
+								<template #prepend>文件名(.*)</template>
+							</el-input>
+						</template>
+					</el-table-column>
+					<el-table-column show-overflow-tooltip label="全路径" prop="id" />
+					<el-table-column label="操作" width="70">
+						<template #default="{ row }">
+							<el-button link type="primary" size="small" @click="() => (row.delete = !row.delete)">
+								{{ row.delete ? '撤销' : '屏蔽' }}
+							</el-button>
+						</template>
+					</el-table-column>
+				</el-table>
+			</VueDraggable>
+		</ElCard>
 	</div>
 </template>
 
@@ -61,10 +50,6 @@ import { VueDraggable } from 'vue-draggable-plus'
 import { getColumnWidth } from '@/util'
 import apis from '@/util/api'
 import { join } from 'path-browserify'
-import { useDarkModeStore } from '@/store'
-const { isDark, toggleDark } = useDarkModeStore()
-// const theme = ref(false)
-
 const folderPath = ref('')
 const fileName = ref('')
 const files = ref([])
@@ -99,7 +84,7 @@ const scanFlvFiles = async (folder) => {
 }
 
 const renderCellClass = (data) => {
-	return (data.columnIndex === 0 ? 'flv-name ' : '') + (data.row.delete && data.columnIndex !== 2 ? ' delete' : '')
+	return data.row.delete && data.columnIndex !== 2 ? ' delete' : ''
 }
 watchEffect(() => {
 	scanFlvFiles(folderPath.value)
@@ -119,23 +104,6 @@ const confirmAndMerge = async () => {
 }
 </script>
 <style scoped lang="scss">
-.main {
-	padding: 20px 20px 0;
-	.nav-bar {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding-bottom: 20px;
-		.title {
-			font-size: 2rem;
-			font-weight: bold;
-		}
-		.theme {
-			display: flex;
-			align-items: center;
-		}
-	}
-}
 .operation-bar {
 	width: 100%;
 	display: flex;
@@ -156,9 +124,6 @@ const confirmAndMerge = async () => {
 }
 :deep(.delete) {
 	filter: brightness(0.96) blur(1px);
-}
-:deep(.flv-name) {
-	width: fit-content;
 }
 </style>
 <style lang="scss">
