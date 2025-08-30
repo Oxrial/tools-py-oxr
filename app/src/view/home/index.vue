@@ -92,7 +92,7 @@ watchEffect(() => {
 const submit = computed(() => sortedFiles.value.filter((s) => !s.delete).map((s) => s.id))
 const confirmAndMerge = async () => {
 	try {
-		await apis.creatFilelistForMerge({
+		await apis.createFilelistMerge({
 			files: submit.value,
 			folderPath: folderPath.value,
 			fileName: fileName.value
