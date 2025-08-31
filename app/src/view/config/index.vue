@@ -8,7 +8,7 @@ const data = reactive({
 	table1: [
 		{ name: '姓名', label: 'name', age: '150', gender: 0 },
 		{ name: '年龄', label: 'age', age: '80', gender: 1 },
-		{ name: '地址', label: 'address', age: '200', gender: 0 }
+		{ name: '地址', label: '', age: '200', gender: 0 }
 	]
 })
 const columns = reactive([
@@ -30,7 +30,8 @@ const columns = reactive([
 	},
 	{
 		label: '地址',
-		prop: 'label'
+		prop: 'label',
+		rules: [{ required: true, message: '必填项', trigger: 'blur' }]
 	}
 ])
 </script>

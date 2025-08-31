@@ -7,56 +7,26 @@
 			:prop="f.prop"
 			:width="f.width"
 			:min-width="f.minWidth"
+			class-name="edit-form-column"
 			v-bind="f.col"
 		>
-			<template #default="{ row, column, $index }">
-				<el-form-item :prop="`data.${formName}.${$index}.${f.prop}`" :rules="f.rules" v-bind="f.ite">
-					<component v-if="!f.options?.length" v-bind="f.com" v-model="row[f.prop]" :is="f.type || ElInput" />
-					<component
-						v-else-if="f.options.length"
-						v-bind="f.com"
-						v-model="row[f.prop]"
-						:is="f.type || ElSelect"
-					>
-						<component
-							v-for="op in f.options"
-							:is="f.subType || ElOption"
-							:label="op.label"
-							:value="op.value"
-							v-bind="omit(op, 'label', 'value')"
-						></component>
-					</component>
-				</el-form-item>
+			<template #default="{ row, $index }">
+				<EditFormItem table :prop="`data.${formName}.${$index}.${f.prop}`" :form-item="f" :data="row" />
 			</template>
 		</el-table-column>
 	</el-table>
 </template>
 
 <script setup lang="ts">
-import type { FormItemRule } from 'element-plus'
+import type { FormItemDefaultProps } from '../types'
 import { omit } from 'lodash-es'
-import { ElInput, ElSelect, ElOption } from 'element-plus'
-import { fchmodSync } from 'fs-extra'
+import EditFormItem from '../edit-form-item/index.vue'
 
-interface FormItemProps {
-	label: string
-	prop: string
-	type?: string
-	subType?: string
-	options?: { [key: string]: any }[]
-	width?: string
-	minWidth?: string
-	col?: object
-	ite?: object
-	com?: object
-	rules?: FormItemRule[]
-}
 const props = withDefaults(
 	defineProps<{
-		[key: string]: any
 		formName: string
 		data: { [key: string]: any }
-		columns?: FormItemProps[]
+		columns?: FormItemDefaultProps[]
 	}>(),
 	{ data: () => [], forms: () => [] }
 )
@@ -65,6 +35,9 @@ const props = withDefaults(
 <style lang="scss" scoped>
 .edit-form-table {
 	width: 100%;
+	.edit-form-column {
+		position: relative;
+	}
 	.el-form-item {
 		margin: unset;
 	}
