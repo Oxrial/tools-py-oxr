@@ -17,12 +17,14 @@ class ConfParamDto(BaseModel):
 
 class FfmpegCanmand(Base):
     __tablename__ = "ffmpeg_command"
-    id = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
     command = Column(String, nullable=False)
     description = Column(String, nullable=True)
 
 
 class FfmpegCanmandDto(BaseModel):
     id: str
+    name: str
     command: str
     description: str

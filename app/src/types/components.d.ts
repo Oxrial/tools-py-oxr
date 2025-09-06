@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     EditFormItem: typeof import('./../components/form-module/edit-form-item/index.vue')['default']
+    EditFormOperation: typeof import('./../components/form-module/edit-form-operation/index.vue')['default']
     EditFormTable: typeof import('./../components/form-module/edit-form-table/index.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
@@ -32,6 +33,7 @@ declare module 'vue' {
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
     ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
+    FormOperation: typeof import('./../components/form-module/form-operation/index.vue')['default']
     HelloWorld: typeof import('./../components/HelloWorld.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
