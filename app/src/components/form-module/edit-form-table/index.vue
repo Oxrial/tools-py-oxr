@@ -1,19 +1,25 @@
 <template>
 	<el-table class="edit-form-table" :data="data[formName]" v-bind="omit(props, 'data', 'formName', 'columns')">
-		<el-table-column
-			v-for="f in columns"
-			:key="f.prop"
-			:label="f.label"
-			:prop="f.prop"
-			:width="f.width"
-			:min-width="f.minWidth"
-			class-name="edit-form-column"
-			v-bind="f.col"
-		>
-			<template #default="{ row, $index }">
-				<EditFormItem table :prop="`data.${formName}.${$index}.${f.prop}`" :form-item="f" :data="row" />
-			</template>
-		</el-table-column>
+		<template v-for="f in columns" :key="f.prop">
+			<el-table-column v-if="f.slot" :label="f.label" v-bind="f.col">
+				<template v-slot="scope">
+					<slot :name="f.slot" v-bind="scope" />
+				</template>
+			</el-table-column>
+			<el-table-column
+				v-else
+				:label="f.label"
+				:prop="f.prop"
+				:width="f.width"
+				:min-width="f.minWidth"
+				class-name="edit-form-column"
+				v-bind="f.col"
+			>
+				<template #default="{ row, $index }">
+					<EditFormItem table :prop="`${formName}.${$index}.${f.prop}`" :form-item="f" :data="row" />
+				</template>
+			</el-table-column>
+		</template>
 	</el-table>
 </template>
 
@@ -25,7 +31,7 @@ import EditFormItem from '../edit-form-item/index.vue'
 const props = withDefaults(
 	defineProps<{
 		formName: string
-		data: { [key: string]: any }
+		data: any
 		columns?: FormItemDefaultProps[]
 	}>(),
 	{ data: () => [], forms: () => [] }

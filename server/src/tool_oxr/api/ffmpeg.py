@@ -1,7 +1,12 @@
 import os
 import subprocess
 from tkinter import Tk, filedialog
-
+from typing import List
+from sqlalchemy import delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
+from .models import FfmpegCanmand, FfmpegCanmandDto
+from ..db import get_db
 from ..util import router, wrap_response
 
 
@@ -74,3 +79,48 @@ def create_filelist_merge(file_paths: list):
         return wrap_response(message="合并成功")
     except subprocess.CalledProcessError as e:
         return wrap_response(message=f"合并失败: {str(e)}", status=2)
+
+
+# 保存ffmpeg命令,整体保存，替换FfmpegCanmand表中数据
+@router.post("/save-ffmpeg-commands")
+async def save_ffmpeg_commands(
+    commands: List[FfmpegCanmandDto], session: AsyncSession = Depends(get_db)
+) -> dict:
+    """保存ffmpeg命令"""
+    try:
+        # 清空表
+        print(">>>" + commands)
+        await session.execute(delete(FfmpegCanmand))
+        # 插入新数据
+        for cmd in commands:
+            ffmpeg_cmd = FfmpegCanmandDto(
+                name=cmd.get("name"),
+                command=cmd.get("command"),
+                description=cmd.get("description"),
+            )
+            session.add(ffmpeg_cmd)
+        await session.commit()
+        return wrap_response(message="ffmpeg命令已保存")
+    except Exception as e:
+        await session.rollback()
+        return wrap_response(message=f"ffmpeg命令保存失败: {str(e)}", status=2)
+
+
+# 获取ffmpeg命令,整体获取，返回FfmpegCanmand表中数据
+@router.get("/get-ffmpeg-commands")
+async def get_ffmpeg_commands(session: AsyncSession = Depends(get_db)) -> dict:
+    """获取ffmpeg命令"""
+    try:
+        result = await session.execute(select(FfmpegCanmand))
+        commands = result.fetchall()
+        command_list = [
+            {
+                "name": cmd.name,
+                "command": cmd.command,
+                "description": cmd.description,
+            }
+            for cmd in commands
+        ]
+        return wrap_response(data={"commands": command_list})
+    except Exception as e:
+        return wrap_response(message=f"获取ffmpeg命令失败: {str(e)}", status=2)

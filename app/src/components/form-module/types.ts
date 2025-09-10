@@ -2,6 +2,7 @@ import type { FormItemRule } from 'element-plus'
 export interface FormItemDefaultProps {
 	label: string
 	prop: string
+	slot?: string
 	type?: string
 	subType?: string
 	options?: { [key: string]: any }[]

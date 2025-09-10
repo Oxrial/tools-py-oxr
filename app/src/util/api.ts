@@ -36,7 +36,7 @@ type ApiToFunction<T extends string> = {
 		as CamelCase<ExtractUrlPart<K>> 表示使用映射类型将原始键名转换为驼峰命名的函数名 
 	*/
 	[K in T as Uncapitalize<CamelCase<ExtractUrlPart<K>>>]: (
-		params: any,
+		params?: any,
 		loading?: boolean,
 		headers?: any
 	) => Promise<any>
@@ -60,7 +60,8 @@ apiArr.forEach((item) => {
 	// 为apiObj添加对应的方法
 	// 使用传入的method或默认的'1'(get方法)调用req发起请求
 	// 添加到 apiObj 并保留类型安全
-	apiObj[key] = ((params: any, loading = false, headers = {}) => req[method](url, params, loading, headers)) as any
+	apiObj[key] = ((params: any = {}, loading = false, headers = {}) =>
+		req[method](url, params, loading, headers)) as any
 })
 
 // 导出具有完整类型提示的api对象

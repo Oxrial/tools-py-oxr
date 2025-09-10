@@ -1,6 +1,5 @@
 <template>
-	<el-form-item class="form-operation"
-		>1
+	<el-form-item class="form-operation">
 		<template v-for="btn in btns">
 			<slot v-if="btn.slot" :name="btn.slot"></slot>
 			<el-button v-else v-bind="omit(btn, 'label')">
