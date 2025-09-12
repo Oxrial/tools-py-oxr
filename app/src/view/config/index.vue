@@ -1,7 +1,6 @@
 <template>
 	<el-form :model="data">
 		<FormOperation :btns="btns" />
-		{{ data }}
 		<EditTable border :formName="'commands'" :data="data" :columns="columns">
 			<template #operation="{ $index }">
 				<el-button link type="danger" size="small" @click="data.commands.splice($index, 1)">删除</el-button>
@@ -18,7 +17,8 @@ const columns = reactive([
 	{
 		label: '标识',
 		prop: 'name',
-		rules: [{ required: true, message: '必填项', trigger: 'blur' }]
+		rules: [{ required: true, message: '必填项', trigger: 'blur' }],
+		col: { width: 150 }
 	},
 	{
 		label: 'ffmpeg命令',
@@ -27,13 +27,13 @@ const columns = reactive([
 	},
 	{
 		label: '备注',
-		prop: 'description',
-		rules: [{ required: true, message: '必填项', trigger: 'blur' }]
+		prop: 'description'
 	},
 	{
 		label: '操作',
 		prop: 'operation',
-		slot: 'operation'
+		slot: 'operation',
+		col: { width: 100 }
 	}
 ])
 const data = reactive<{ commands: any[] }>({
@@ -49,9 +49,10 @@ const btns = [
 	{
 		label: '全部保存',
 		type: 'primary',
-		icon: 'el-icon-plus',
+		icon: 'el-icon-finished',
 		onClick: () => {
-			apis.saveFfmpegCommands(data.commands).then(() => {
+			apis.saveFfmpegCommands(data.commands).then((res) => {
+				ElMessage({ message: res.message, type: 'success' })
 				loadingFFmpegCommands()
 			})
 		}

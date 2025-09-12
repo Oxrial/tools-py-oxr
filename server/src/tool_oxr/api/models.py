@@ -17,9 +17,9 @@ class ConfParamDto(BaseModel):
 
 class FfmpegCanmand(Base):
     __tablename__ = "ffmpeg_command"
-    name = Column(String, primary_key=True, nullable=False)
-    command = Column(String, nullable=False)
-    description = Column(String, nullable=True)
+    name = Column(String, primary_key=True, nullable=True)
+    command = Column(String, nullable=True)
+    description = Column(String, nullable=False)
 
 
 class FfmpegCanmandDto(BaseModel):

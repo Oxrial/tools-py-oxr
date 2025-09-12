@@ -5,7 +5,7 @@
 const apiArr = [
 	'/select-folder',
 	'/scan-files',
-	'/create-filelist-merge',
+	'/create-filelist-merge_2',
 	'/save-ffmpeg-commands_2',
 	'/get-ffmpeg-commands'
 ] as const

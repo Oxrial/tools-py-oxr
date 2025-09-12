@@ -1,13 +1,23 @@
+import logging
 import os
 import subprocess
 from tkinter import Tk, filedialog
 from typing import List
+
+from fastapi import Depends, Response
+from pydantic import BaseModel
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
-from .models import FfmpegCanmand, FfmpegCanmandDto
+
 from ..db import get_db
 from ..util import router, wrap_response
+from .models import FfmpegCanmand, FfmpegCanmandDto
+
+log = logging.getLogger(__name__)
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+consoleHeader = logging.StreamHandler()
+consoleHeader.setFormatter(formatter)
+log.addHandler(consoleHeader)
 
 
 @router.get("/select-folder")
@@ -49,33 +59,51 @@ async def scan_files(path):
     return wrap_response(data={"files": files})
 
 
+class MergeFilesDto(BaseModel):
+    files: List[str]
+    folderPath: str
+    fileName: str
+
+
 # 根据文件列表生成ffmpeg合并文件filelist.txt，并调用ffmpeg进行合并（需检查ffmpeg是否安装）
 @router.post("/create-filelist-merge")
-def create_filelist_merge(file_paths: list):
+async def create_filelist_merge(
+    req: MergeFilesDto,
+    session: AsyncSession = Depends(get_db),
+):
+    print(req)
     """创建ffmpeg合并文件filelist.txt"""
-    if not file_paths:
+    if not req.files:
         return wrap_response(message="文件列表不能为空", status=2)
     filelist_path = "filelist.txt"
-    with open(filelist_path, "w") as f:
-        for path in file_paths:
-            f.write(f"file '{path}'\n")
+    # with open(filelist_path, "w") as f:
+    #     for path in file_paths:
+    #         f.write(f"file '{path}'\n")
     # 调用ffmpeg进行合并
     try:
-        subprocess.run(
-            [
-                "ffmpeg",
-                "-f",
-                "concat",
-                "-safe",
-                "0",
-                "-i",
-                filelist_path,
-                "-c",
-                "copy",
-                "output.mp4",
-            ],
-            check=True,
+        result = await session.execute(
+            select(FfmpegCanmand).where(FfmpegCanmand.name == "UN_TXT")
         )
+        cmd = result.scalar_one()
+        command = cmd.command.replace("filelist_path", filelist_path).replace(
+            "output", req.fileName
+        )
+        print(command)
+        # subprocess.run(
+        #     [
+        #         "ffmpeg",
+        #         "-f",
+        #         "concat",
+        #         "-safe",
+        #         "0",
+        #         "-i",
+        #         filelist_path,
+        #         "-c",
+        #         "copy",
+        #         "output.mp4",
+        #     ],
+        #     check=True,
+        # )
         return wrap_response(message="合并成功")
     except subprocess.CalledProcessError as e:
         return wrap_response(message=f"合并失败: {str(e)}", status=2)
@@ -89,16 +117,10 @@ async def save_ffmpeg_commands(
     """保存ffmpeg命令"""
     try:
         # 清空表
-        print(">>>" + commands)
         await session.execute(delete(FfmpegCanmand))
         # 插入新数据
-        for cmd in commands:
-            ffmpeg_cmd = FfmpegCanmandDto(
-                name=cmd.get("name"),
-                command=cmd.get("command"),
-                description=cmd.get("description"),
-            )
-            session.add(ffmpeg_cmd)
+        orm_commands = [FfmpegCanmand(**cmd.model_dump()) for cmd in commands]
+        session.add_all(orm_commands)
         await session.commit()
         return wrap_response(message="ffmpeg命令已保存")
     except Exception as e:
@@ -112,7 +134,7 @@ async def get_ffmpeg_commands(session: AsyncSession = Depends(get_db)) -> dict:
     """获取ffmpeg命令"""
     try:
         result = await session.execute(select(FfmpegCanmand))
-        commands = result.fetchall()
+        commands = result.scalars().all()
         command_list = [
             {
                 "name": cmd.name,
@@ -121,6 +143,7 @@ async def get_ffmpeg_commands(session: AsyncSession = Depends(get_db)) -> dict:
             }
             for cmd in commands
         ]
-        return wrap_response(data={"commands": command_list})
+        return wrap_response(data=command_list)
     except Exception as e:
+        log.error(f"获取ffmpeg命令失败: {e}")
         return wrap_response(message=f"获取ffmpeg命令失败: {str(e)}", status=2)
