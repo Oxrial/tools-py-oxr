@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    CommForm: typeof import('./../components/comm-form/index.vue')['default']
     EditFormItem: typeof import('./../components/form-module/edit-form-item/index.vue')['default']
     EditFormOperation: typeof import('./../components/form-module/edit-form-operation/index.vue')['default']
     EditFormTable: typeof import('./../components/form-module/edit-form-table/index.vue')['default']
@@ -28,6 +29,7 @@ declare module 'vue' {
     ElMain: typeof import('element-plus/es')['ElMain']
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
+    ElOption: typeof import('element-plus/es')['ElOption']
     ElScrollbar: typeof import('element-plus/es')['ElScrollbar']
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']

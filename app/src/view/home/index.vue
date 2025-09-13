@@ -10,19 +10,16 @@
 			>
 			</ElInput>
 			<ElInput v-model="fileName" placeholder="文件名" style="width: 30rem"> </ElInput>
-			<ElButton :disabled="!sortedFiles.length" type="success" plain @click="confirmAndMerge"
-				>生成 ({{ submit.length }}/{{ sortedFiles.length }})</ElButton
+			<ElButton :disabled="!showFiles.length" type="success" plain @click="confirmAndMerge"
+				>生成 ({{ submit.length }}/{{ showFiles.length }}/{{ sortedFiles.length }})</ElButton
 			>
 		</ElButtonGroup>
 	</div>
+	<ElSelect v-model="docmd" placeholder="请选择指令" :options="cmds" />
 	<div>
 		<ElCard class="flv-list">
 			<VueDraggable v-model="sortedFiles" ghostClass="ghost" target="tbody" :animation="150">
-				<el-table
-					:data="sortedFiles.filter((f) => f.name.match(new RegExp(ext, 'i')) || f.name.includes(ext))"
-					:cell-class-name="renderCellClass"
-					height="calc(100vh - 12rem)"
-				>
+				<el-table :data="showFiles" :cell-class-name="renderCellClass" height="calc(100vh - 13rem)">
 					<el-table-column prop="name" :width="getColumnWidth('name', sortedFiles)">
 						<template #header>
 							<el-input v-model="ext" size="small">
@@ -47,20 +44,30 @@
 <script setup>
 import { ref, watch, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
-import { getColumnWidth } from '@/util'
+import { callSuccess, getColumnWidth } from '@/util'
 import apis from '@/util/api'
 import { join } from 'path-browserify'
+import { ElSelect } from 'element-plus'
 const folderPath = ref('')
 const fileName = ref('')
 const files = ref([])
 const sortedFiles = ref([])
 const disabledScan = ref(false)
-const ext = ref('flv')
+const ext = ref()
 const selectFolder = async () => {
 	await apis.selectFolder({}, true, { timeout: 300000 }).then((res) => {
 		folderPath.value = res.data.folder_path
 	})
 }
+const cmds = ref([])
+const getCmds = () => {
+	apis.getFfmpegCommands().then((res) => {
+		cmds.value = res.data.map((c) => ({ label: c.name, value: c.command }))
+	})
+}
+onMounted(getCmds)
+const docmd = ref()
+const showFiles = ref([])
 const scanFlvFiles = async (folder) => {
 	if (disabledScan.value || !folder.length) return
 	await apis.scanFiles({ path: folder }).then((res) => {
@@ -70,37 +77,43 @@ const scanFlvFiles = async (folder) => {
 			sortedFiles.value.length,
 			...files.value.map((f) => ({
 				name: f.substring(f.lastIndexOf('/') + 1),
-				id: join(folder, f),
+				id: f,
 				delete: false
 			}))
 		)
-		if (sortedFiles.value.length) {
-			const n = sortedFiles.value[0].name
-			fileName.value =
-				folder.substring(folder.lastIndexOf('\\') + 1) + n.substring(n.lastIndexOf('-'), n.indexOf('.'))
-		}
-		console.log('🚀 ~ selectFolder ~ files:', sortedFiles)
 	})
 }
 
+watch(showFiles, () => {
+	if (showFiles.value.length) {
+		fileName.value = 'output_' + showFiles.value[0].name
+	}
+})
 const renderCellClass = (data) => {
 	return data.row.delete && data.columnIndex !== 2 ? ' delete' : ''
 }
 watchEffect(() => {
 	scanFlvFiles(folderPath.value)
 })
-const submit = computed(() => sortedFiles.value.filter((s) => !s.delete).map((s) => s.id))
+watchEffect(
+	() =>
+		(showFiles.value = sortedFiles.value.filter(
+			(f) => f.name.match(new RegExp(ext.value, 'i')) || f.name.includes(ext.value)
+		))
+)
+const submit = computed(() =>
+	sortedFiles.value
+		.filter((s) => !s.delete && (s.name.match(new RegExp(ext.value, 'i')) || s.name.includes(ext.value)))
+		.map((s) => s.id)
+)
 const confirmAndMerge = async () => {
-	try {
-		await apis.createFilelistMerge({
+	await apis
+		.createFilelistMerge({
 			files: submit.value,
 			folderPath: folderPath.value,
 			fileName: fileName.value
 		})
-		ElMessage({ message: '视频合并完成！', type: 'success' })
-	} catch (error) {
-		ElMessage({ message: `Error: ${error}`, type: 'error' })
-	}
+		.then(callSuccess)
 }
 </script>
 <style scoped lang="scss">

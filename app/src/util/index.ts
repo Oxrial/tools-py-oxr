@@ -61,3 +61,6 @@ export { getColumnWidth, typesof }
 export const hump2Bar = (value: string) => {
 	return value.replace(/(A-Z)g/, '-$1').toLocaleLowerCase()
 }
+
+export const callSuccess = (res: any) =>
+	res.status === 1 && ElMessage({ message: res.message, type: 'success', duration: 5 * 1000 })

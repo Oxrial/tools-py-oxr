@@ -3,6 +3,7 @@
 		:class="table ? 'table-item' : ''"
 		:prop="table ? prop : formItem.prop"
 		:rules="formItem.rules"
+		:key="table ? prop : formItem.prop"
 		v-bind="{ ...(table ? { label: ' ' } : pick(formItem, 'label')), ...formItem.ite }"
 	>
 		<component
@@ -32,7 +33,7 @@
 import type { FormItemProps } from '../types'
 import { ElInput, ElSelect, ElOption } from 'element-plus'
 import { omit, pick } from 'lodash-es'
-const props = withDefaults(
+withDefaults(
 	defineProps<{
 		data: { [key: string]: any }
 		formItem: FormItemProps

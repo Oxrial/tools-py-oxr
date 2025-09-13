@@ -1,10 +1,13 @@
+import codecs
 import logging
 import os
+import re
+import shlex
 import subprocess
 from tkinter import Tk, filedialog
 from typing import List
 
-from fastapi import Depends, Response
+from fastapi import BackgroundTasks, Depends, Response
 from pydantic import BaseModel
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,44 +72,62 @@ class MergeFilesDto(BaseModel):
 @router.post("/create-filelist-merge")
 async def create_filelist_merge(
     req: MergeFilesDto,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db),
 ):
-    print(req)
-    """创建ffmpeg合并文件filelist.txt"""
+    """创建ffmpeg合并文件filelist.txt，并后台执行合并任务"""
     if not req.files:
         return wrap_response(message="文件列表不能为空", status=2)
-    filelist_path = "filelist.txt"
-    # with open(filelist_path, "w") as f:
-    #     for path in file_paths:
-    #         f.write(f"file '{path}'\n")
-    # 调用ffmpeg进行合并
+    if re.match(r".+\..+", req.fileName) is None:
+        return wrap_response(message="文件名称异常", status=2)
+    filelist_path = os.path.join(req.folderPath, "filelist.txt").replace("\\", "/")
+    output_path = os.path.join(req.folderPath, req.fileName).replace("\\", "/")
+    # 查询 ffmpeg 命令模板
+    result = await session.execute(
+        select(FfmpegCanmand).where(FfmpegCanmand.name == "UN_TXT")
+    )
+    cmd = result.scalar_one()
+    command_template = cmd.command  # 命令示例中包含占位符 FILE_LIST_TEXT 和 OUT_PUT
+    # 添加后台任务执行合并
+    background_tasks.add_task(
+        merge_files_task, req, command_template, filelist_path, output_path
+    )
+    return wrap_response(message="合并任务已提交，待执行完成后通知结果")
+
+
+def merge_files_task(
+    req: MergeFilesDto, command_template: str, filelist_path: str, output_path: str
+):
+    """后台任务：生成 filelist 文件并执行 ffmpeg 合并命令"""
+    import codecs
+    import logging
+    import shlex
+    import subprocess
+
+    log = logging.getLogger(__name__)
     try:
-        result = await session.execute(
-            select(FfmpegCanmand).where(FfmpegCanmand.name == "UN_TXT")
+        # 生成 filelist 文件，确保路径格式为正斜杠
+        with codecs.open(filelist_path, "w", encoding="utf-8") as f:
+            for path in req.files:
+                adjusted_path = path.replace("\\", "/")
+                f.write(f"file '{adjusted_path}'\n")
+        # 替换模板中的占位符
+        command = command_template.replace("FILE_LIST_TEXT", filelist_path).replace(
+            "OUT_PUT", output_path
         )
-        cmd = result.scalar_one()
-        command = cmd.command.replace("filelist_path", filelist_path).replace(
-            "output", req.fileName
+        log.info(f"准备合并，指令：{command}，输出文件：{output_path}")
+        # 包装命令，使其在新的cmd窗口中运行，并在执行完成后关闭
+        final_command = f'start cmd /c "{command}"'
+        subprocess_result = subprocess.Popen(
+            final_command,
+            shell=True,
+            creationflags=subprocess.CREATE_NEW_CONSOLE,
+            text=True,
+            encoding="utf-8",
         )
-        print(command)
-        # subprocess.run(
-        #     [
-        #         "ffmpeg",
-        #         "-f",
-        #         "concat",
-        #         "-safe",
-        #         "0",
-        #         "-i",
-        #         filelist_path,
-        #         "-c",
-        #         "copy",
-        #         "output.mp4",
-        #     ],
-        #     check=True,
-        # )
-        return wrap_response(message="合并成功")
+        log.info(f"合并完成: {subprocess_result.stdout}")
     except subprocess.CalledProcessError as e:
-        return wrap_response(message=f"合并失败: {str(e)}", status=2)
+        log.error(f"合并失败: {e}, stderr: {e.stderr}")
 
 
 # 保存ffmpeg命令,整体保存，替换FfmpegCanmand表中数据
