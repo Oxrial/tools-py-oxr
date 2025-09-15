@@ -66,15 +66,12 @@ class MergeFilesDto(BaseModel):
     files: List[str]
     folderPath: str
     fileName: str
+    cmd: str
 
 
 # 根据文件列表生成ffmpeg合并文件filelist.txt，并调用ffmpeg进行合并（需检查ffmpeg是否安装）
 @router.post("/create-filelist-merge")
-async def create_filelist_merge(
-    req: MergeFilesDto,
-    background_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_db),
-):
+async def create_filelist_merge(req: MergeFilesDto, background_tasks: BackgroundTasks):
     """创建ffmpeg合并文件filelist.txt，并后台执行合并任务"""
     if not req.files:
         return wrap_response(message="文件列表不能为空", status=2)
@@ -82,26 +79,15 @@ async def create_filelist_merge(
         return wrap_response(message="文件名称异常", status=2)
     filelist_path = os.path.join(req.folderPath, "filelist.txt").replace("\\", "/")
     output_path = os.path.join(req.folderPath, req.fileName).replace("\\", "/")
-    # 查询 ffmpeg 命令模板
-    result = await session.execute(
-        select(FfmpegCanmand).where(FfmpegCanmand.name == "UN_TXT")
-    )
-    cmd = result.scalar_one()
-    command_template = cmd.command  # 命令示例中包含占位符 FILE_LIST_TEXT 和 OUT_PUT
     # 添加后台任务执行合并
-    background_tasks.add_task(
-        merge_files_task, req, command_template, filelist_path, output_path
-    )
+    background_tasks.add_task(merge_files_task, req, filelist_path, output_path)
     return wrap_response(message="合并任务已提交，待执行完成后通知结果")
 
 
-def merge_files_task(
-    req: MergeFilesDto, command_template: str, filelist_path: str, output_path: str
-):
+def merge_files_task(req: MergeFilesDto, filelist_path: str, output_path: str):
     """后台任务：生成 filelist 文件并执行 ffmpeg 合并命令"""
     import codecs
     import logging
-    import shlex
     import subprocess
 
     log = logging.getLogger(__name__)
@@ -112,7 +98,7 @@ def merge_files_task(
                 adjusted_path = path.replace("\\", "/")
                 f.write(f"file '{adjusted_path}'\n")
         # 替换模板中的占位符
-        command = command_template.replace("FILE_LIST_TEXT", filelist_path).replace(
+        command = req.cmd.replace("FILE_LIST_TEXT", filelist_path).replace(
             "OUT_PUT", output_path
         )
         log.info(f"准备合并，指令：{command}，输出文件：{output_path}")

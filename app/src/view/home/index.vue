@@ -10,35 +10,40 @@
 			>
 			</ElInput>
 			<ElInput v-model="fileName" placeholder="文件名" style="width: 30rem"> </ElInput>
-			<ElButton :disabled="!showFiles.length" type="success" plain @click="confirmAndMerge"
+			<ElButton :disabled="!showFiles.length || !docmd" type="success" plain @click="confirmAndMerge"
 				>生成 ({{ submit.length }}/{{ showFiles.length }}/{{ sortedFiles.length }})</ElButton
 			>
 		</ElButtonGroup>
 	</div>
-	<ElSelect v-model="docmd" placeholder="请选择指令" :options="cmds" />
-	<div>
-		<ElCard class="flv-list">
-			<VueDraggable v-model="sortedFiles" ghostClass="ghost" target="tbody" :animation="150">
-				<el-table :data="showFiles" :cell-class-name="renderCellClass" height="calc(100vh - 13rem)">
-					<el-table-column prop="name" :width="getColumnWidth('name', sortedFiles)">
-						<template #header>
-							<el-input v-model="ext" size="small">
-								<template #prepend>文件名(.*)</template>
-							</el-input>
-						</template>
-					</el-table-column>
-					<el-table-column show-overflow-tooltip label="全路径" prop="id" />
-					<el-table-column label="操作" width="70">
-						<template #default="{ row }">
-							<el-button link type="primary" size="small" @click="() => (row.delete = !row.delete)">
-								{{ row.delete ? '撤销' : '屏蔽' }}
-							</el-button>
-						</template>
-					</el-table-column>
-				</el-table>
-			</VueDraggable>
-		</ElCard>
-	</div>
+	<ElSelect v-model="docmd" placeholder="请选择指令">
+		<ElOption
+			v-for="item in cmds"
+			:key="item.value"
+			:label="`${item.label} - [ ${item.value} ]`"
+			:value="item.value"
+		/>
+	</ElSelect>
+	<ElCard class="flv-list">
+		<VueDraggable v-model="sortedFiles" ghostClass="ghost" target="tbody" :animation="150">
+			<el-table :data="showFiles" :cell-class-name="renderCellClass" height="calc(100vh - 16rem)">
+				<el-table-column prop="name" :width="getColumnWidth('name', sortedFiles)">
+					<template #header>
+						<el-input v-model="ext" size="small">
+							<template #prepend>文件名(.*)</template>
+						</el-input>
+					</template>
+				</el-table-column>
+				<el-table-column show-overflow-tooltip label="全路径" prop="id" />
+				<el-table-column label="操作" width="70">
+					<template #default="{ row }">
+						<el-button link type="primary" size="small" @click="() => (row.delete = !row.delete)">
+							{{ row.delete ? '撤销' : '屏蔽' }}
+						</el-button>
+					</template>
+				</el-table-column>
+			</el-table>
+		</VueDraggable>
+	</ElCard>
 </template>
 
 <script setup>
@@ -62,7 +67,9 @@ const selectFolder = async () => {
 const cmds = ref([])
 const getCmds = () => {
 	apis.getFfmpegCommands().then((res) => {
-		cmds.value = res.data.map((c) => ({ label: c.name, value: c.command }))
+		cmds.value = res.data
+			.map((c) => ({ label: c.name, value: c.command }))
+			.sort((a, b) => a.label.localeCompare(b.label))
 	})
 }
 onMounted(getCmds)
@@ -86,7 +93,11 @@ const scanFlvFiles = async (folder) => {
 
 watch(showFiles, () => {
 	if (showFiles.value.length) {
-		fileName.value = 'output_' + showFiles.value[0].name
+		const nf = 'output_' + showFiles.value[0].name
+		fileName.value = nf
+		const extstr = nf.substring(nf.lastIndexOf('.') + 1).toLocaleLowerCase()
+		const f = cmds.value.find((c) => c.label.toLocaleLowerCase().includes(extstr))
+		if (f) docmd.value = f.value
 	}
 })
 const renderCellClass = (data) => {
@@ -111,7 +122,8 @@ const confirmAndMerge = async () => {
 		.createFilelistMerge({
 			files: submit.value,
 			folderPath: folderPath.value,
-			fileName: fileName.value
+			fileName: fileName.value,
+			cmd: docmd.value
 		})
 		.then(callSuccess)
 }
@@ -137,6 +149,9 @@ const confirmAndMerge = async () => {
 }
 :deep(.delete) {
 	filter: brightness(0.96) blur(1px);
+}
+.flv-list {
+	margin-top: 20px;
 }
 </style>
 <style lang="scss">
