@@ -12,9 +12,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .db import init_db
-from .util import PORTS
-from .api import routers
+from tool_oxr.db import init_db
+from tool_oxr.util import PORTS
+from tool_oxr.api import routers
 
 
 def get_resource_path(relative_path):

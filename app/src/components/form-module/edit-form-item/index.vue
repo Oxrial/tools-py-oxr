@@ -46,6 +46,11 @@ withDefaults(
 
 <style lang="scss" scoped>
 .table-item {
+	&.el-form-item--small {
+		:deep(.el-form-item__label) {
+			margin-left: -7px;
+		}
+	}
 	:deep(.el-form-item__label) {
 		position: absolute;
 		margin-left: -10px;

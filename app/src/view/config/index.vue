@@ -1,9 +1,9 @@
 <template>
-	<el-form :model="data">
+	<el-form :model="data" size="small">
 		<FormOperation :btns="btns" />
 		<EditTable border :formName="'commands'" :data="data" :columns="columns">
 			<template #operation="{ $index }">
-				<el-button link type="danger" size="small" @click="data.commands.splice($index, 1)">删除</el-button>
+				<el-button link type="danger" @click="data.commands.splice($index, 1)">删除</el-button>
 			</template>
 		</EditTable>
 	</el-form>
@@ -13,6 +13,7 @@
 import EditTable from '@/components/form-module/edit-form-table/index.vue'
 import FormOperation from '@/components/form-module/form-operation/index.vue'
 import apis from '@/util/api'
+import { ElInput } from 'element-plus'
 const columns = reactive([
 	{
 		label: '标识',
@@ -23,11 +24,16 @@ const columns = reactive([
 	{
 		label: 'ffmpeg命令',
 		prop: 'command',
+		type: ElInput,
+		com: { type: 'textarea', spellcheck: false, autosize: { minRows: 1 } },
 		rules: [{ required: true, message: '必填项', trigger: 'blur' }]
 	},
 	{
-		label: '备注',
-		prop: 'description'
+		label: '备注（占位符）',
+		prop: 'description',
+		type: ElInput,
+		com: { type: 'textarea', spellcheck: false, autosize: { minRows: 1 } },
+		col: { width: 200 }
 	},
 	{
 		label: '操作',

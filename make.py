@@ -146,17 +146,21 @@ def run_dev():
         remove_exit_signal()
 
 
+def run_cmd(cmd, cwd=None):
+    subprocess.run(cmd, cwd=cwd, check=True)
+
+
 def build_prod():
     """构建生产环境"""
     print("构建生产环境...")
 
     # 构建前端
     print("构建前端生产包...")
-    run_command(["pnpm", "run", "build"], cwd="app")
+    run_cmd([get_pnpm_path(), "run", "build"], cwd="app")
 
     # 构建后端
-    print("构建后端生产包...")
-    run_command(["uv", "pip", "install", "--only-binary=:all", "."], cwd="server")
+    # print("构建后端生产包...")
+    # run_command(["uv", "pip", "install", "--only-binary=:all", "."], cwd="server")
 
     print("生产构建完成")
 
@@ -171,7 +175,7 @@ def package_desktop():
         build_prod()
 
     # 执行打包
-    run_command(["python", "scripts/desktop.py"])
+    run_cmd([get_uv_python(), "scripts/desktop.py"])
     print("桌面应用打包完成")
 
 

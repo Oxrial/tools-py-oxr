@@ -31,15 +31,17 @@ class Config:
     DIST_DIR = BASE_DIR / "dist"  # 前端构建输出
     ASSETS_DIR = BASE_DIR / "assets"  # 图标等资源
     OUTPUT_DIR = BASE_DIR / "dist-desktop"  # 最终输出目录
+    TOOL_OXR_DIR = BACKEND_DIR / "src" / "tool_oxr"
+    DB_DIR = TOOL_OXR_DIR / "data.db"
 
     # 入口文件
-    ENTRY_POINT = BACKEND_DIR / "src" / "tool_oxr" / "main.py"
+    ENTRY_POINT = TOOL_OXR_DIR / "main.py"
 
     # 平台特定配置
     ICONS = {
-        "Windows": ASSETS_DIR / "app_icon.ico",
+        "Windows": ASSETS_DIR / "oxr.ico",
         "Darwin": ASSETS_DIR / "app_icon.icns",
-        "Linux": ASSETS_DIR / "app_icon.png",
+        "Linux": ASSETS_DIR / "oxr-192x192.png",
     }
 
     # 平台名称映射
@@ -57,9 +59,9 @@ def validate_environment():
 
     # 检查 Nuitka 是否安装
     try:
-        import nuitka
+        from nuitka.Version import getNuitkaVersion
 
-        print(f"Nuitka 版本: {nuitka.__version__}")
+        print(f"Nuitka 版本: { getNuitkaVersion()}")
     except ImportError:
         print("Nuitka 未安装，请运行: pip install nuitka")
         return False
@@ -114,24 +116,23 @@ def build_nuitka_command(target_os=None):
         "-m",
         "nuitka",
         "--standalone",
-        "--onefile",
         f"--output-dir={output_dir}",
         f"--include-data-dir={Config.DIST_DIR}=dist",
         f"--include-data-dir={Config.ASSETS_DIR}=assets",
-        "--enable-plugin=pywebview",
+        f"--include-data-dir={Config.TOOL_OXR_DIR}=tool_oxr",
         "--remove-output",  # 清理临时文件
         "--assume-yes-for-downloads",  # 自动确认下载
+        "--show-progress",
     ]
 
     # 包含必要的 Python 包
     include_packages = [
         "fastapi",
         "uvicorn",
-        "jinja2",
         "pydantic",
-        "pywebview",
-        "websockets",
+        "sqlalchemy",
         "psutil",
+        "tool_oxr",
     ]
 
     for pkg in include_packages:
@@ -141,8 +142,7 @@ def build_nuitka_command(target_os=None):
     if target_os == "Windows":
         command.extend(
             [
-                f"--windows-icon={Config.ICONS['Windows']}",
-                "--windows-disable-console",
+                f"--windows-icon-from-ico={Config.ICONS['Windows']}",
                 f"--windows-product-name={Config.APP_NAME}",
                 f"--windows-company-name={Config.COMPANY}",
                 f"--windows-file-version={Config.APP_VERSION}",
@@ -185,20 +185,22 @@ def package_for_platform(target_os=None):
     command, output_dir = build_nuitka_command(target_os)
 
     # 显示完整命令（用于调试）
-    print("Nuitka 命令: " + " ".join(command))
-
+    print("Nuitka 命令: " + " ".join(command) + " " + f"--output-dir={output_dir}")
     # 创建临时目录
     with tempfile.TemporaryDirectory() as tmp_dir:
         env = os.environ.copy()
         env["NUITKA_TEMP_DIR"] = tmp_dir
 
         try:
+            final_command = f'start cmd /c "{" ".join(command)}"'
             # 执行打包命令
             result = subprocess.run(
-                command,
+                final_command,
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                shell=True,
+                creationflags=subprocess.CREATE_NEW_CONSOLE,
                 text=True,
                 env=env,
             )
@@ -210,9 +212,9 @@ def package_for_platform(target_os=None):
             print(f"{platform_name} 平台打包成功")
             print(f"输出目录: {output_dir}")
 
-            # 在 Windows 上添加版本信息文件
-            if target_os == "Windows":
-                create_version_file(output_dir)
+            # # 在 Windows 上添加版本信息文件
+            # if target_os == "Windows":
+            #     create_version_file(output_dir)
 
             return True
         except subprocess.CalledProcessError as e:
@@ -226,6 +228,8 @@ def package_for_platform(target_os=None):
 
 def create_version_file(output_dir):
     """创建 Windows 版本信息文件（增强元数据）"""
+    import codecs
+
     version_file = output_dir / "version_info.txt"
     content = f"""\
 VSVersionInfo(
@@ -259,7 +263,7 @@ VSVersionInfo(
   ]
 )
 """
-    with open(version_file, "w") as f:
+    with codecs.open(version_file, "w", encoding="utf-8") as f:
         f.write(content)
     print(f"已创建版本信息文件: {version_file}")
 
@@ -274,18 +278,18 @@ def cleanup_output():
 
 def package_all_platforms():
     """为所有支持的平台打包"""
-    platforms = ["Windows", "Darwin", "Linux"]
+    platforms = ["Windows"]  # , "Darwin", "Linux"
     success = True
 
     for target_os in platforms:
         # 跳过当前不支持打包的平台
-        if target_os == "Darwin" and platform.system() != "Darwin":
-            print("macOS 应用只能在 macOS 系统上打包，跳过...")
-            continue
+        # if target_os == "Darwin" and platform.system() != "Darwin":
+        #     print("macOS 应用只能在 macOS 系统上打包，跳过...")
+        #     continue
 
-        if target_os == "Linux" and platform.system() not in ["Linux", "Darwin"]:
-            print("Linux 应用建议在 Linux 系统上打包，跳过...")
-            continue
+        # if target_os == "Linux" and platform.system() not in ["Linux", "Darwin"]:
+        #     print("Linux 应用建议在 Linux 系统上打包，跳过...")
+        #     continue
 
         if not package_for_platform(target_os):
             success = False
@@ -295,6 +299,8 @@ def package_all_platforms():
 
 def create_launcher_scripts():
     """创建启动脚本（用于测试）"""
+    import codecs
+
     print("创建测试启动脚本...")
 
     # Windows 启动脚本
@@ -306,7 +312,7 @@ dist-desktop\\windows\\desktop.exe
 pause
 """
         bat_path = Config.BASE_DIR / "launch.bat"
-        with open(bat_path, "w") as f:
+        with codecs.open(bat_path, "w", encoding="utf-8") as f:
             f.write(bat_content)
         print(f"创建 Windows 启动脚本: {bat_path}")
 
@@ -318,7 +324,7 @@ echo "启动 {Config.APP_NAME}..."
 dist-desktop/linux/desktop
 """
         sh_path = Config.BASE_DIR / "launch.sh"
-        with open(sh_path, "w") as f:
+        with codecs.open(sh_path, "w", encoding="utf-8") as f:
             f.write(sh_content)
         sh_path.chmod(0o755)  # 添加可执行权限
         print(f"创建 Unix 启动脚本: {sh_path}")
@@ -333,12 +339,12 @@ def main():
         default="all",
         help="目标平台 (默认: 所有平台)",
     )
-    parser.add_argument("--debug", action="store_true", help="启用调试模式")
-    args = parser.parse_args()
+    # parser.add_argument("--debug", action="store_true", help="启用调试模式")
+    # args = parser.parse_args()
 
-    # 设置调试模式
-    if args.debug:
-        print("调试模式已启用")
+    # # 设置调试模式
+    # if args.debug:
+    #     print("调试模式已启用")
 
     # 验证环境
     if not validate_environment():
@@ -358,16 +364,16 @@ def main():
         target_os = platform_map[args.platform]
         success = package_for_platform(target_os)
 
-    # 创建启动脚本
-    if success:
-        create_launcher_scripts()
-        print("=" * 50)
-        print(f"{Config.APP_NAME} {Config.APP_VERSION} 打包完成!")
-        print(f"输出目录: {Config.OUTPUT_DIR}")
-        print("=" * 50)
-    else:
-        print("打包过程中出现错误，请检查日志")
-        sys.exit(1)
+    # # 创建启动脚本
+    # if success:
+    #     create_launcher_scripts()
+    #     print("=" * 50)
+    #     print(f"{Config.APP_NAME} {Config.APP_VERSION} 打包完成!")
+    #     print(f"输出目录: {Config.OUTPUT_DIR}")
+    #     print("=" * 50)
+    # else:
+    #     print("打包过程中出现错误，请检查日志")
+    #     sys.exit(1)
 
 
 if __name__ == "__main__":

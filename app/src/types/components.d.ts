@@ -10,7 +10,6 @@ declare module 'vue' {
   export interface GlobalComponents {
     CommForm: typeof import('./../components/comm-form/index.vue')['default']
     EditFormItem: typeof import('./../components/form-module/edit-form-item/index.vue')['default']
-    EditFormOperation: typeof import('./../components/form-module/edit-form-operation/index.vue')['default']
     EditFormTable: typeof import('./../components/form-module/edit-form-table/index.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
@@ -21,9 +20,6 @@ declare module 'vue' {
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElHeader: typeof import('element-plus/es')['ElHeader']
     ElIcon: typeof import('element-plus/es')['ElIcon']
-    ElIconExpand: typeof import('@element-plus/icons-vue')['Expand']
-    ElIconFold: typeof import('@element-plus/icons-vue')['Fold']
-    ElIconMenu: typeof import('@element-plus/icons-vue')['Menu']
     ElImage: typeof import('element-plus/es')['ElImage']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElMain: typeof import('element-plus/es')['ElMain']

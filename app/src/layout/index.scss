@@ -61,6 +61,7 @@
 }
 .el-main {
 	height: calc(100vh - theme(logo_height));
+	padding-top: unset;
 }
 .el-container {
 	height: 100vh;

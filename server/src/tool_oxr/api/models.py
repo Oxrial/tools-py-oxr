@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
 
-from ..db import Base
+from tool_oxr.db import Base
 
 
 class ConfParam(Base):

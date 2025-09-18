@@ -147,7 +147,6 @@ def run_command(cmd, cwd=None, name: str = "Process", realtime_output: bool = Tr
             bufsize=1,
             creationflags=creationflags,
             encoding=encoding,  # 使用系统编码
-            errors="ignore",
         )
 
         # 创建包装器

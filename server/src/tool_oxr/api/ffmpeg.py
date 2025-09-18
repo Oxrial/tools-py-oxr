@@ -12,9 +12,9 @@ from pydantic import BaseModel
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..db import get_db
-from ..util import router, wrap_response
-from .models import FfmpegCanmand, FfmpegCanmandDto
+from tool_oxr.db import get_db
+from tool_oxr.util import router, wrap_response
+from tool_oxr.api.models import FfmpegCanmand, FfmpegCanmandDto
 
 log = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")

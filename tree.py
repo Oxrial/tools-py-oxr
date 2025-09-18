@@ -29,7 +29,9 @@ def dfs_showdir(path, depth):
             ".vscode",
             "node_modules",
             ".venv",
-            "server",
+            "app",
+            "dist",
+            "dist-desktop",
             "scripts",
         ]:
             continue
