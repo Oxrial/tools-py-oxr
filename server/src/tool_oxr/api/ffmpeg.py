@@ -23,6 +23,20 @@ consoleHeader.setFormatter(formatter)
 log.addHandler(consoleHeader)
 
 
+@router.get("/select-files")
+async def select_files():
+    """选择文件，多选"""
+    root = Tk()
+    root.withdraw()
+    root.lift()  # 提升窗口层级
+    root.attributes("-topmost", True)  # 置顶
+    file_paths = filedialog.askopenfilenames(title="选择文件")
+    root.destroy()
+    if not file_paths:
+        return wrap_response(message="未选择文件", status=2)
+    return wrap_response(data={"file_paths": file_paths})
+
+
 @router.get("/select-folder")
 async def select_folder():
     """选择文件夹"""

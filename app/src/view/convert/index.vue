@@ -1,28 +1,21 @@
 <template>
 	<div class="operation-bar">
-		<ElButton @click="selectFolder" type="primary" plain> 选择文件夹 </ElButton>
+		<ElButton @click="selectFiles" type="primary" plain> 选择文件 </ElButton>
 		<ElButtonGroup>
-			<ElInput
-				v-model="folderPath"
-				placeholder="键入地址"
-				@focus="() => (disabledScan = true)"
-				@blur="() => (disabledScan = false)"
-			>
-			</ElInput>
-			<ElInput v-model="fileName" placeholder="文件名" style="width: 30rem"> </ElInput>
+			<ElSelect v-model="docmd" placeholder="请选择指令">
+				<ElOption
+					v-for="item in cmds"
+					:key="item.value"
+					:label="`${item.label} - [ ${item.value} ]`"
+					:value="item.value"
+				/>
+			</ElSelect>
+			<ElInput v-model="fileExt" placeholder="转换后文件类型" style="width: 10%" />
 			<ElButton :disabled="!showFiles.length || !docmd" type="success" plain @click="confirmAndMerge"
 				>生成 ({{ submit.length }}/{{ showFiles.length }}/{{ sortedFiles.length }})</ElButton
 			>
 		</ElButtonGroup>
 	</div>
-	<ElSelect v-model="docmd" placeholder="请选择指令">
-		<ElOption
-			v-for="item in cmds"
-			:key="item.value"
-			:label="`${item.label} - [ ${item.value} ]`"
-			:value="item.value"
-		/>
-	</ElSelect>
 	<ElCard class="flv-list">
 		<VueDraggable v-model="sortedFiles" ghostClass="ghost" target="tbody" :animation="150">
 			<el-table :data="showFiles" :cell-class-name="renderCellClass" height="calc(100vh - 16rem)">
@@ -34,6 +27,7 @@
 					</template>
 				</el-table-column>
 				<el-table-column show-overflow-tooltip label="全路径" prop="id" />
+				<el-table-column show-overflow-tooltip label="输出预览" prop="conv" />
 				<el-table-column label="操作" width="70">
 					<template #default="{ row }">
 						<el-button link type="primary" size="small" @click="() => (row.delete = !row.delete)">
@@ -47,28 +41,37 @@
 </template>
 
 <script setup>
-import { ref, watch, watchEffect } from 'vue'
+import { ref, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { callSuccess, getColumnWidth } from '@/util'
 import apis from '@/util/api'
-import { join } from 'path-browserify'
 import { ElSelect } from 'element-plus'
-const folderPath = ref('')
-const fileName = ref('')
+const fileExt = ref('m4a')
 const files = ref([])
 const sortedFiles = ref([])
-const disabledScan = ref(false)
 const ext = ref()
-const selectFolder = async () => {
-	await apis.selectFolder({}, true, { timeout: 300000 }).then((res) => {
-		folderPath.value = res.data.folder_path
+const selectFiles = async () => {
+	await apis.selectFiles({}, true, { timeout: 300000 }).then((res) => {
+		files.value = res.data.file_paths
+		sortedFiles.value.splice(
+			0,
+			sortedFiles.value.length,
+			...files.value.map((f) => ({
+				name: f.substring(f.lastIndexOf('/') + 1),
+				id: f,
+				delete: false,
+				conv: fileExt.value
+					? f.substring(f.lastIndexOf('/') + 1, f.lastIndexOf('.') + 1) + fileExt.value
+					: f.substring(f.lastIndexOf('/') + 1)
+			}))
+		)
 	})
 }
 const cmds = ref([])
 const getCmds = () => {
 	apis.getFfmpegCommands().then((res) => {
 		cmds.value = res.data
-			.filter((c) => c.name.includes('UN_'))
+			.filter((c) => c.name.includes('CONV_'))
 			.map((c) => ({ label: c.name, value: c.command }))
 			.sort((a, b) => a.label.localeCompare(b.label))
 	})
@@ -76,37 +79,10 @@ const getCmds = () => {
 onMounted(getCmds)
 const docmd = ref()
 const showFiles = ref([])
-const scanFlvFiles = async (folder) => {
-	if (disabledScan.value || !folder.length) return
-	await apis.scanFiles({ path: folder }).then((res) => {
-		files.value = res.data.files || []
-		sortedFiles.value.splice(
-			0,
-			sortedFiles.value.length,
-			...files.value.map((f) => ({
-				name: f.substring(f.lastIndexOf('/') + 1),
-				id: f,
-				delete: false
-			}))
-		)
-	})
-}
 
-watch(showFiles, () => {
-	if (showFiles.value.length) {
-		const nf = 'output_' + showFiles.value[0].name
-		fileName.value = nf
-		const extstr = nf.substring(nf.lastIndexOf('.') + 1).toLocaleLowerCase()
-		const f = cmds.value.find((c) => c.label.toLocaleLowerCase().includes(extstr))
-		if (f) docmd.value = f.value
-	}
-})
 const renderCellClass = (data) => {
 	return data.row.delete && data.columnIndex !== 2 ? ' delete' : ''
 }
-watchEffect(() => {
-	scanFlvFiles(folderPath.value)
-})
 watchEffect(
 	() =>
 		(showFiles.value = sortedFiles.value.filter(
@@ -116,14 +92,12 @@ watchEffect(
 const submit = computed(() =>
 	sortedFiles.value
 		.filter((s) => !s.delete && (s.name.match(new RegExp(ext.value, 'i')) || s.name.includes(ext.value)))
-		.map((s) => s.id)
+		.map((s) => ({ id: s.id, conv: s.id.substring(0, s.id.lastIndexOf('.') + 1) + fileExt.value }))
 )
 const confirmAndMerge = async () => {
 	await apis
 		.createFilelistMerge({
-			files: submit.value,
-			folderPath: folderPath.value,
-			fileName: fileName.value,
+			convFiles: submit.value,
 			cmd: docmd.value
 		})
 		.then(callSuccess)
@@ -131,7 +105,6 @@ const confirmAndMerge = async () => {
 </script>
 <style scoped lang="scss">
 .operation-bar {
-	width: 100%;
 	display: flex;
 	padding-bottom: 20px;
 	> :last-child {
