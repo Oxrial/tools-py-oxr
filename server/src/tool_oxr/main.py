@@ -1,4 +1,5 @@
 import multiprocessing
+import os
 import sys
 import threading
 import time
@@ -20,20 +21,15 @@ from tool_oxr.api import routers
 log = build_logger(__name__)
 
 
-# 添加环境检测函数
-def is_frozen():
-    """检查是否在打包环境中运行"""
-    return hasattr(sys, "frozen") or hasattr(sys, "_MEIPASS")
+def get_resource_path(relative_path: str) -> Path:
+    try:
+        # 打包后资源路径
+        base_path = sys._MEIPASS
+    except Exception:
+        # 开发环境资源路径
+        base_path = os.path.abspath(".")
 
-
-def get_resource_path(relative_path):
-    if is_frozen():
-        # 打包后的环境
-        base_path = Path(sys._MEIPASS)
-    else:
-        # 开发环境
-        base_path = Path.cwd()
-    return base_path / relative_path
+    return os.path.join(base_path, relative_path)
 
 
 def find_available_port(start_port, max_attempts=10):
@@ -85,15 +81,15 @@ app.add_middleware(
 for router in routers:
     app.include_router(router, prefix="/api")
 
-from fastapi.responses import FileResponse
+frontend_dist = get_resource_path("dist")
+if os.path.exists(frontend_dist):
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="static")
 
 
-@app.get("/{full_path:path}")
-async def spa_fallback(full_path: str):
-    index_file = get_resource_path("dist") / "index.html"
-    if index_file.exists():
-        return FileResponse(index_file)
-    raise HTTPException(status_code=404, detail="Not Found")
+# 根路径重定向到前端
+@app.get("/")
+async def root():
+    return {"message": "Please use the desktop application interface."}
 
 
 # 异常处理
@@ -108,69 +104,6 @@ async def general_exception_handler(request: Request, exc: Exception):
     """通用异常处理"""
     log.error(f"未处理的异常: {str(exc)}", exc_info=True)
     return JSONResponse(status_code=500, content={"error": "内部服务器错误"})
-
-
-def start_api_server():
-    config = uvicorn.Config(app, host="0.0.0.0", port=_PORTS["API"])
-    server = uvicorn.Server(config)
-    server.run()
-
-
-async def main():
-    # 生产环境入口（打包后调用）
-    dist_path = get_resource_path("dist")
-    if dist_path.exists():
-        app.mount("/static", StaticFiles(directory=dist_path, html=True), name="static")
-        log.info(f"已挂载前端静态文件: {dist_path}")
-    else:
-        log.info(f"前端构建目录不存在: {dist_path}")
-        # 尝试其他可能的路径
-        alt_paths = [
-            Path(__file__).parent.parent / "dist",
-            Path(sys.executable).parent / "dist",
-            Path.cwd() / "dist",
-        ]
-
-        for alt_path in alt_paths:
-            if alt_path.exists():
-                app.mount(
-                    "/", StaticFiles(directory=alt_path, html=True), name="static"
-                )
-                log.info(f"已挂载前端静态文件: {alt_path}")
-                break
-        else:
-            log.error("所有可能的前端路径都不存在")
-
-    log.info(f"启动API服务器在端口 {_PORTS['API']}...")
-    api_thread = threading.Thread(target=start_api_server, daemon=True)
-    api_thread.start()
-    log.info("API服务器已启动")
-    log.info("启动桌面应用...")
-    try:
-        webview.create_window(
-            "桌面应用",
-            url=f"http://localhost:{_PORTS['API']}",
-            width=1200,
-            height=800,
-        )
-        webview.start(debug=True)
-        log.info("桌面应用已启动")
-    except Exception as e:
-        log.error(f"启动WebView时出错: {e}")
-        # 在打包环境中，可能需要使用不同的方式启动
-        try:
-            index_path = dist_path / "index.html"
-            if index_path.exists():
-                window = webview.create_window(
-                    "桌面应用",
-                    url=f"file:///{index_path}",
-                    width=1200,
-                    height=800,
-                )
-                webview.start()
-                log.info("使用本地文件启动成功")
-        except Exception as file_err:
-            log.error(f"使用本地文件启动也失败: {file_err}")
 
 
 def start_fastapi():
@@ -195,7 +128,7 @@ def run_dev():
             url=f"http://localhost:{_PORTS['APP']}",
             width=1200,
             height=800,
-            http_port=PORTS["DESKTOP"],
+            http_port=_PORTS["DESKTOP"],
         )
         webview.start(debug=True)
     except Exception as e:
@@ -203,14 +136,4 @@ def run_dev():
 
 
 if __name__ == "__main__":
-    # 根据环境选择入口点
-    if is_frozen():
-        # 打包环境 - 使用生产模式
-        log.info(f"运行在打包环境，使用生产模式${ str(is_frozen())}")
-        import asyncio
-
-        asyncio.run(main())
-    else:
-        # 开发环境 - 使用开发模式
-        log.info(f"运行在开发环境，使用开发模式${ str(is_frozen())}")
-        run_dev()
+    run_dev()

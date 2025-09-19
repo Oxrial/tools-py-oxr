@@ -10,7 +10,7 @@ import setupExtend from 'vite-plugin-vue-setup-extend'
 
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
-	base: process.env.NODE_ENV === 'production' ? '' : './',
+	base: './',
 	server: {
 		port: 9001,
 		strictPort: true,

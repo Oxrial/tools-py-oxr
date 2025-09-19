@@ -33,6 +33,7 @@ class Config:
     DIST_DIR = BASE_DIR / "dist"  # 前端构建输出
     ASSETS_DIR = BASE_DIR / "assets"  # 图标等资源
     OUTPUT_DIR = BASE_DIR / "dist-desktop"  # 最终输出目录
+    OUTPUT_MAIN = OUTPUT_DIR / "windows" / "launcher.dist" / "launcher.exe"
     TOOL_OXR_DIR = BACKEND_DIR / "src" / "tool_oxr"
     DB_DIR = TOOL_OXR_DIR / "data.db"
 
@@ -129,7 +130,6 @@ def build_nuitka_command(target_os=None):
         f"--output-dir={output_dir}",
         f"--include-data-dir={Config.DIST_DIR}=dist",
         f"--include-data-dir={Config.ASSETS_DIR}=assets",
-        f"--include-data-dir={Config.TOOL_OXR_DIR}=tool_oxr",
         "--remove-output",  # 清理临时文件
         "--assume-yes-for-downloads",  # 自动确认下载
     ]
@@ -144,7 +144,6 @@ def build_nuitka_command(target_os=None):
         "pydantic",
         "sqlalchemy",
         "psutil",
-        "tool_oxr",
     ]
 
     for pkg in include_packages:
@@ -216,11 +215,13 @@ def package_for_platform(target_os=None):
                 text=True,
                 env=env,
             )
-
             # 记录输出
             if result.stdout:
                 print("Nuitka 输出:\n" + result.stdout)
 
+            # 记录输出
+            if result.stderr:
+                print("Nuitka 输出E:\n" + result.stderr)
             print(f"{platform_name} 平台打包成功")
             print(f"输出目录: {output_dir}")
 
@@ -295,6 +296,9 @@ def main():
         platform_map = {"windows": "Windows", "macos": "Darwin", "linux": "Linux"}
         target_os = platform_map[args.platform]
         success = package_for_platform(target_os)
+    print(f"打包完成${str(success)}")
+    if success:
+        subprocess.run(f"start cmd /c ${Config.OUTPUT_MAIN}", shell=True)
 
 
 if __name__ == "__main__":

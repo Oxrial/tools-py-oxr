@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from fastapi import APIRouter
 
-PORTS = {"SERVER": 9000, "APP": 9001, "DESKTOP": 9002, "API": 9003, "RELOAD": 9004}
+PORTS = {"SERVER": 39000, "APP": 39001, "DESKTOP": 39002, "API": 39003, "RELOAD": 39004}
 # 创建 API 路由
 router = APIRouter()
 executor = ThreadPoolExecutor(max_workers=1)

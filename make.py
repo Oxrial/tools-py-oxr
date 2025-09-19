@@ -74,78 +74,6 @@ def install_dev():
     return success
 
 
-def run_dev():
-    """启动开发环境"""
-    print("启动开发环境...")
-
-    # 确保信号文件不存在
-    remove_exit_signal()
-
-    # 确保依赖已安装
-    if not (FRONTEND_DIR / "node_modules").exists():
-        print("前端依赖未安装，自动安装中...")
-        if not install_dev():
-            print("安装失败，退出")
-            return
-
-    # 直接运行 dev.py
-    dev_script = BASE_DIR / "scripts" / "dev.py"
-    cmd = [sys.executable, "-u", str(dev_script)]  # 无缓冲输出
-
-    print(f"执行命令: {' '.join(cmd)}")
-    print(f"工作目录: {str(BASE_DIR)}")
-
-    try:
-        # 创建进程
-        proc = subprocess.Popen(
-            cmd,
-            cwd=str(BASE_DIR),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True,
-            text=True,
-            bufsize=1,
-        )
-
-        # 实时读取输出
-        try:
-            while True:
-                line = proc.stdout.readline()
-                if not line and proc.poll() is not None:
-                    break
-                if line:
-                    # 移除可能的额外换行符
-                    line = line.rstrip("\n")
-                    print(line)
-        except KeyboardInterrupt:
-            print("\n收到中断信号，停止开发环境...")
-            # 发送退出信号
-            write_exit_signal()
-
-            # 等待进程退出
-            try:
-                print("等待开发进程退出...")
-                proc.wait(timeout=10)
-                print("开发环境已停止")
-            except subprocess.TimeoutExpired:
-                print("进程未响应，强制终止...")
-                proc.kill()
-                proc.wait()
-        except Exception as e:
-            print(f"读取输出时出错: {e}")
-        finally:
-            # 确保清理信号文件
-            remove_exit_signal()
-            if proc.poll() is None:
-                proc.kill()
-                proc.wait()
-    except Exception as e:
-        print(f"启动开发环境失败: {e}")
-    finally:
-        # 最终清理
-        remove_exit_signal()
-
-
 def run_cmd(cmd, cwd=None):
     subprocess.run(cmd, cwd=cwd, check=True)
 
@@ -182,7 +110,6 @@ def package_desktop():
 def main():
     commands = {
         "install": install_dev,
-        "dev": run_dev,
         "build": build_prod,
         "desktop": package_desktop,
     }
