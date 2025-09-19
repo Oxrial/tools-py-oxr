@@ -6,12 +6,14 @@
 """
 
 import os
+from pathlib import Path
 import sys
 import shutil
 import subprocess
 import platform
 import argparse
 import tempfile
+
 from util import (
     get_uv_python,
     BASE_DIR,
@@ -35,7 +37,7 @@ class Config:
     DB_DIR = TOOL_OXR_DIR / "data.db"
 
     # 入口文件
-    ENTRY_POINT = TOOL_OXR_DIR / "main.py"
+    ENTRY_POINT = BASE_DIR / "launcher.py"
 
     # 平台特定配置
     ICONS = {
@@ -109,7 +111,15 @@ def build_nuitka_command(target_os=None):
 
     # 获取 Python 解释器
     python_exe = get_uv_python()
+    # 获取 PyWebView 的 JS 文件路径
+    try:
+        import webview
 
+        webview_path = Path(webview.__file__).parent
+        js_path = webview_path / "js"
+    except ImportError:
+        js_path = None
+        print("警告: 无法找到 webview 模块，JS 文件可能不会包含在打包中")
     # 基础命令
     command = [
         str(python_exe),
@@ -122,9 +132,11 @@ def build_nuitka_command(target_os=None):
         f"--include-data-dir={Config.TOOL_OXR_DIR}=tool_oxr",
         "--remove-output",  # 清理临时文件
         "--assume-yes-for-downloads",  # 自动确认下载
-        "--show-progress",
     ]
 
+    # 包含 PyWebView 的 JS 文件
+    if js_path and js_path.exists():
+        command.append(f"--include-data-dir={js_path}=webview/js")
     # 包含必要的 Python 包
     include_packages = [
         "fastapi",
@@ -212,10 +224,6 @@ def package_for_platform(target_os=None):
             print(f"{platform_name} 平台打包成功")
             print(f"输出目录: {output_dir}")
 
-            # # 在 Windows 上添加版本信息文件
-            # if target_os == "Windows":
-            #     create_version_file(output_dir)
-
             return True
         except subprocess.CalledProcessError as e:
             print(f"{platform_name} 平台打包失败，退出码: {e.returncode}")
@@ -224,48 +232,6 @@ def package_for_platform(target_os=None):
             if e.stdout:
                 print("输出信息:\n" + e.stdout.strip())
             return False
-
-
-def create_version_file(output_dir):
-    """创建 Windows 版本信息文件（增强元数据）"""
-    import codecs
-
-    version_file = output_dir / "version_info.txt"
-    content = f"""\
-VSVersionInfo(
-  ffi=FixedFileInfo(
-    filevers={tuple(map(int, Config.APP_VERSION.split('.')))},
-    prodvers={tuple(map(int, Config.APP_VERSION.split('.')))},
-    mask=0x3f,
-    flags=0x0,
-    OS=0x40004,
-    fileType=0x1,
-    subtype=0x0,
-    date=(0, 0)
-  ),
-  kids=[
-    StringFileInfo(
-      [
-        StringTable(
-          u'040904B0',
-          [
-            StringStruct(u'CompanyName', u"{Config.COMPANY}"),
-            StringStruct(u'FileDescription', u"{Config.APP_NAME}"),
-            StringStruct(u'FileVersion', u"{Config.APP_VERSION}"),
-            StringStruct(u'InternalName', u"{Config.APP_NAME}"),
-            StringStruct(u'LegalCopyright', u"Copyright © {Config.COMPANY}"),
-            StringStruct(u'OriginalFilename', u"{Config.APP_NAME}.exe"),
-            StringStruct(u'ProductName', u"{Config.APP_NAME}"),
-            StringStruct(u'ProductVersion', u"{Config.APP_VERSION}")
-          ])
-      ]),
-    VarFileInfo([VarStruct(u'Translation', [1033, 1200])]
-  ]
-)
-"""
-    with codecs.open(version_file, "w", encoding="utf-8") as f:
-        f.write(content)
-    print(f"已创建版本信息文件: {version_file}")
 
 
 def cleanup_output():
@@ -297,39 +263,6 @@ def package_all_platforms():
     return success
 
 
-def create_launcher_scripts():
-    """创建启动脚本（用于测试）"""
-    import codecs
-
-    print("创建测试启动脚本...")
-
-    # Windows 启动脚本
-    if platform.system() == "Windows":
-        bat_content = f"""\
-@echo off
-echo 启动 {Config.APP_NAME}...
-dist-desktop\\windows\\desktop.exe
-pause
-"""
-        bat_path = Config.BASE_DIR / "launch.bat"
-        with codecs.open(bat_path, "w", encoding="utf-8") as f:
-            f.write(bat_content)
-        print(f"创建 Windows 启动脚本: {bat_path}")
-
-    # Linux/macOS 启动脚本
-    else:
-        sh_content = f"""\
-#!/bin/bash
-echo "启动 {Config.APP_NAME}..."
-dist-desktop/linux/desktop
-"""
-        sh_path = Config.BASE_DIR / "launch.sh"
-        with codecs.open(sh_path, "w", encoding="utf-8") as f:
-            f.write(sh_content)
-        sh_path.chmod(0o755)  # 添加可执行权限
-        print(f"创建 Unix 启动脚本: {sh_path}")
-
-
 def main():
     # 解析命令行参数
     parser = argparse.ArgumentParser(description="桌面应用打包工具")
@@ -339,8 +272,7 @@ def main():
         default="all",
         help="目标平台 (默认: 所有平台)",
     )
-    # parser.add_argument("--debug", action="store_true", help="启用调试模式")
-    # args = parser.parse_args()
+    args = parser.parse_args()
 
     # # 设置调试模式
     # if args.debug:
@@ -363,17 +295,6 @@ def main():
         platform_map = {"windows": "Windows", "macos": "Darwin", "linux": "Linux"}
         target_os = platform_map[args.platform]
         success = package_for_platform(target_os)
-
-    # # 创建启动脚本
-    # if success:
-    #     create_launcher_scripts()
-    #     print("=" * 50)
-    #     print(f"{Config.APP_NAME} {Config.APP_VERSION} 打包完成!")
-    #     print(f"输出目录: {Config.OUTPUT_DIR}")
-    #     print("=" * 50)
-    # else:
-    #     print("打包过程中出现错误，请检查日志")
-    #     sys.exit(1)
 
 
 if __name__ == "__main__":
