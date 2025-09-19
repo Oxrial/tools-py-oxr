@@ -37,6 +37,18 @@ export const routes: Array<RouteRecordRaw> = [
 		]
 	},
 	{
+		path: '/convert',
+		component: Layout,
+		redirect: '/convert/index',
+		meta: { title: '文件转换', icon: 'el-icon-switch' },
+		children: [
+			{
+				path: 'index',
+				component: () => import('@/view/convert/index.vue')
+			}
+		]
+	},
+	{
 		path: '/config',
 		component: Layout,
 		redirect: '/config/index',
