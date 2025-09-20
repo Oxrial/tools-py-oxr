@@ -11,7 +11,7 @@ import uvicorn
 import webview
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from tool_oxr.db import init_db
@@ -76,20 +76,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# 挂载 API 路由
-for router in routers:
-    app.include_router(router, prefix="/api")
-
 frontend_dist = get_resource_path("dist")
-if os.path.exists(frontend_dist):
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="static")
+
+index_file = get_resource_path("dist/index.html")
+
+
+@app.get("/{full_path:path}")
+async def spa_fallback(full_path: str):
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    raise HTTPException(status_code=404, detail="Not Found X")
 
 
 # 根路径重定向到前端
 @app.get("/")
 async def root():
-    return {"message": "Please use the desktop application interface."}
+    log.info("访问根index.html")
+    return FileResponse(index_file)
+
+
+# 根路径重定向到前端
+@app.get("/404")
+async def for404():
+    log.info("访问根index.html")
+    return FileResponse(index_file)
 
 
 # 异常处理
@@ -104,6 +114,14 @@ async def general_exception_handler(request: Request, exc: Exception):
     """通用异常处理"""
     log.error(f"未处理的异常: {str(exc)}", exc_info=True)
     return JSONResponse(status_code=500, content={"error": "内部服务器错误"})
+
+
+# 挂载 API 路由
+for router in routers:
+    app.include_router(router, prefix="/api")
+
+if os.path.exists(frontend_dist):
+    app.mount("/app", StaticFiles(directory=frontend_dist, html=True), name="dist")
 
 
 def start_fastapi():

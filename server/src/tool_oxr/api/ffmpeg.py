@@ -13,7 +13,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tool_oxr.db import get_db
-from tool_oxr.util import router, wrap_response
+from tool_oxr.util import wrap_response
 from tool_oxr.api.models import FfmpegCanmand, FfmpegCanmandDto
 
 log = logging.getLogger(__name__)
@@ -21,6 +21,11 @@ formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 consoleHeader = logging.StreamHandler()
 consoleHeader.setFormatter(formatter)
 log.addHandler(consoleHeader)
+
+from fastapi import APIRouter
+
+# 创建 API 路由
+router = APIRouter()
 
 
 @router.get("/select-files")

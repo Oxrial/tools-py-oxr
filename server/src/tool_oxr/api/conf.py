@@ -3,8 +3,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tool_oxr.db import get_db
-from tool_oxr.util import router, wrap_response
+from tool_oxr.util import wrap_response
 from tool_oxr.api.models import ConfParam, ConfParamDto
+
+from fastapi import APIRouter
+
+# 创建 API 路由
+router = APIRouter()
 
 
 async def select_conf_param(key: str, session: AsyncSession = Depends(get_db)):

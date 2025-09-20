@@ -2,10 +2,12 @@ import threading
 import time
 import uvicorn
 import webview
-from server.src.tool_oxr.main import app as fastapi_app, _PORTS
+from server.src.tool_oxr.main import app as fastapi_app, _PORTS, get_resource_path
 
 # 全局变量存储服务器状态
 server_ready = False
+
+url = get_resource_path("dist/index.html")
 
 
 def run_server():
@@ -14,7 +16,7 @@ def run_server():
 
     # 配置UVicorn
     config = uvicorn.Config(
-        fastapi_app, host="127.0.0.1", port=_PORTS["API"], log_level="info"
+        fastapi_app, host="127.0.0.1", port=_PORTS["API"], log_level="debug"
     )
     server = uvicorn.Server(config)
 
@@ -30,6 +32,10 @@ def on_loaded():
     print("Application loaded successfully")
 
 
+def get_current_url(window):
+    print(window.get_current_url())
+
+
 def main():
     # 启动FastAPI服务器线程
     server_thread = threading.Thread(target=run_server, daemon=True)
@@ -40,7 +46,6 @@ def main():
         time.sleep(0.1)
 
     # 创建并启动PyWebview窗口
-    url = f"http://127.0.0.1:${_PORTS['API']}"
     window = webview.create_window(
         "Tools-OXR",
         url,
@@ -54,7 +59,7 @@ def main():
     window.events.loaded += on_loaded
 
     # 启动应用
-    webview.start(debug=True)
+    webview.start(get_current_url, window, debug=True, http_server=False)
 
 
 if __name__ == "__main__":
