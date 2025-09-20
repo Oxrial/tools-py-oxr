@@ -1,7 +1,4 @@
 import multiprocessing
-import os
-import sys
-import threading
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -15,21 +12,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from tool_oxr.db import init_db
-from tool_oxr.util import PORTS, build_logger
+from tool_oxr.util import PORTS, get_resource_path
 from tool_oxr.api import routers
-
-log = build_logger(__name__)
-
-
-def get_resource_path(relative_path: str) -> Path:
-    try:
-        # 打包后资源路径
-        base_path = sys._MEIPASS
-    except Exception:
-        # 开发环境资源路径
-        base_path = os.path.abspath(".")
-
-    return os.path.join(base_path, relative_path)
 
 
 def find_available_port(start_port, max_attempts=10):
@@ -76,52 +60,45 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-frontend_dist = get_resource_path("dist")
 
-index_file = get_resource_path("dist/index.html")
+# 挂载 API 路由
+for router in routers:
+    app.include_router(router, prefix="/api")
+
+
+app.mount(
+    "/static", StaticFiles(directory=get_resource_path("dist/static")), name="static"
+)
 
 
 @app.get("/{full_path:path}")
-async def spa_fallback(full_path: str):
-    if os.path.exists(index_file):
-        return FileResponse(index_file)
-    raise HTTPException(status_code=404, detail="Not Found X")
+async def catch_all(request: Request, full_path: str):
+    # 排除API和静态文件请求
+    if not full_path.startswith(("api/", "static/")):
+        return FileResponse("dist/index.html")
+    else:
+        return JSONResponse(status_code=404, content={"detail": "Not Found X"})
 
 
-# 根路径重定向到前端
-@app.get("/")
-async def root():
-    log.info("访问根index.html")
-    return FileResponse(index_file)
-
-
-# 根路径重定向到前端
-@app.get("/404")
-async def for404():
-    log.info("访问根index.html")
-    return FileResponse(index_file)
+@app.exception_handler(500)
+async def internal_error_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        content={"error5": "Internal server error", "detail": str(exc)}, status_code=500
+    )
 
 
 # 异常处理
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     """HTTP异常处理"""
-    return JSONResponse(status_code=exc.status_code, content={"error": exc.detail})
+    return JSONResponse(status_code=exc.status_code, content={"errorH": exc.detail})
 
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     """通用异常处理"""
-    log.error(f"未处理的异常: {str(exc)}", exc_info=True)
-    return JSONResponse(status_code=500, content={"error": "内部服务器错误"})
-
-
-# 挂载 API 路由
-for router in routers:
-    app.include_router(router, prefix="/api")
-
-if os.path.exists(frontend_dist):
-    app.mount("/app", StaticFiles(directory=frontend_dist, html=True), name="dist")
+    print(f"未处理的异常: {str(exc)}", exc_info=True)
+    return JSONResponse(status_code=500, content={"errorE": "内部服务器错误"})
 
 
 def start_fastapi():
@@ -150,7 +127,7 @@ def run_dev():
         )
         webview.start(debug=True)
     except Exception as e:
-        log.error(f"启动WebView时出错: {e}")
+        print(f"启动WebView时出错: {e}")
 
 
 if __name__ == "__main__":

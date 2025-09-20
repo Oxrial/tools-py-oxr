@@ -1,28 +1,18 @@
 import codecs
-import logging
 import os
 import re
-import shlex
 import subprocess
 from tkinter import Tk, filedialog
 from typing import List
 
-from fastapi import BackgroundTasks, Depends, Response
+from fastapi import APIRouter, BackgroundTasks, Depends
 from pydantic import BaseModel
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tool_oxr.api.models import FfmpegCanmand, FfmpegCanmandDto
 from tool_oxr.db import get_db
 from tool_oxr.util import wrap_response
-from tool_oxr.api.models import FfmpegCanmand, FfmpegCanmandDto
-
-log = logging.getLogger(__name__)
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-consoleHeader = logging.StreamHandler()
-consoleHeader.setFormatter(formatter)
-log.addHandler(consoleHeader)
-
-from fastapi import APIRouter
 
 # 创建 API 路由
 router = APIRouter()
@@ -105,11 +95,7 @@ async def create_filelist_merge(req: MergeFilesDto, background_tasks: Background
 
 def merge_files_task(req: MergeFilesDto, filelist_path: str, output_path: str):
     """后台任务：生成 filelist 文件并执行 ffmpeg 合并命令"""
-    import codecs
-    import logging
-    import subprocess
 
-    log = logging.getLogger(__name__)
     try:
         # 生成 filelist 文件，确保路径格式为正斜杠
         with codecs.open(filelist_path, "w", encoding="utf-8") as f:
@@ -120,7 +106,7 @@ def merge_files_task(req: MergeFilesDto, filelist_path: str, output_path: str):
         command = req.cmd.replace("FILE_LIST_TEXT", filelist_path).replace(
             "OUT_PUT", output_path
         )
-        log.info(f"准备合并，指令：{command}，输出文件：{output_path}")
+        print(f"准备合并，指令：{command}，输出文件：{output_path}")
         # 包装命令，使其在新的cmd窗口中运行，并在执行完成后关闭
         final_command = f'start cmd /c "{command}"'
         subprocess_result = subprocess.Popen(
@@ -130,9 +116,9 @@ def merge_files_task(req: MergeFilesDto, filelist_path: str, output_path: str):
             text=True,
             encoding="utf-8",
         )
-        log.info(f"合并完成: {subprocess_result.stdout}")
+        print(f"合并完成: {subprocess_result.stdout}")
     except subprocess.CalledProcessError as e:
-        log.error(f"合并失败: {e}, stderr: {e.stderr}")
+        print(f"合并失败: {e}, stderr: {e.stderr}")
 
 
 # 保存ffmpeg命令,整体保存，替换FfmpegCanmand表中数据
@@ -171,5 +157,5 @@ async def get_ffmpeg_commands(session: AsyncSession = Depends(get_db)) -> dict:
         ]
         return wrap_response(data=command_list)
     except Exception as e:
-        log.error(f"获取ffmpeg命令失败: {e}")
+        print(f"获取ffmpeg命令失败: {e}")
         return wrap_response(message=f"获取ffmpeg命令失败: {str(e)}", status=2)

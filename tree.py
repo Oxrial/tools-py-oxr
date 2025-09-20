@@ -45,3 +45,6 @@ def dfs_showdir(path, depth):
 
 if __name__ == "__main__":
     dfs_showdir(".", 0)
+
+    fu = "static/index-D0Oe4bds.js"
+    print(fu.startswith(("static/", "api/")))

@@ -130,7 +130,9 @@ def build_nuitka_command(target_os=None):
         f"--output-dir={output_dir}",
         f"--include-data-dir={Config.DIST_DIR}=dist",
         f"--include-data-dir={Config.ASSETS_DIR}=assets",
+        f"--include-data-file={Config.DB_DIR}=data.db",  # 新增的data.db配置
         "--remove-output",  # 清理临时文件
+        "--enable-plugin=tk-inter",  # 启用 Tkinter 插件
         "--assume-yes-for-downloads",  # 自动确认下载
     ]
 
@@ -159,25 +161,25 @@ def build_nuitka_command(target_os=None):
                 f"--windows-file-version={Config.APP_VERSION}",
             ]
         )
-    elif target_os == "Darwin":
-        command.extend(
-            [
-                f"--macos-app-icon={Config.ICONS['Darwin']}",
-                "--macos-create-app-bundle",
-                f"--macos-app-name={Config.APP_NAME}",
-                f"--macos-app-version={Config.APP_VERSION}",
-                "--macos-signed-app-name=My Signed App",
-                "--macos-app-protected-resource=all",
-            ]
-        )
-    elif target_os == "Linux":
-        command.extend(
-            [
-                f"--linux-icon={Config.ICONS['Linux']}",
-                f"--linux-onefile-icon={Config.ICONS['Linux']}",
-                "--linux-disable-console",
-            ]
-        )
+    # elif target_os == "Darwin":
+    #     command.extend(
+    #         [
+    #             f"--macos-app-icon={Config.ICONS['Darwin']}",
+    #             "--macos-create-app-bundle",
+    #             f"--macos-app-name={Config.APP_NAME}",
+    #             f"--macos-app-version={Config.APP_VERSION}",
+    #             "--macos-signed-app-name=My Signed App",
+    #             "--macos-app-protected-resource=all",
+    #         ]
+    #     )
+    # elif target_os == "Linux":
+    #     command.extend(
+    #         [
+    #             f"--linux-icon={Config.ICONS['Linux']}",
+    #             f"--linux-onefile-icon={Config.ICONS['Linux']}",
+    #             "--linux-disable-console",
+    #         ]
+    #     )
 
     # 添加入口点
     command.append(str(Config.ENTRY_POINT))

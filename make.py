@@ -1,17 +1,8 @@
-import sys
-import time
 import subprocess
+import sys
 from pathlib import Path
-from scripts.util import (
-    BASE_DIR,
-    BACKEND_DIR,
-    FRONTEND_DIR,
-    run_command,
-    get_pnpm_path,
-    get_uv_python,
-    write_exit_signal,
-    remove_exit_signal,
-)
+
+from scripts.util import BACKEND_DIR, FRONTEND_DIR, get_pnpm_path, get_uv_python
 
 
 def install_dev():
