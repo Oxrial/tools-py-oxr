@@ -14,11 +14,7 @@ import platform
 import argparse
 import tempfile
 
-from util import (
-    get_uv_python,
-    BASE_DIR,
-    BACKEND_DIR,
-)
+from util import get_uv_python, BASE_DIR, BACKEND_DIR, run_command
 
 
 # 基础配置
@@ -112,44 +108,31 @@ def build_nuitka_command(target_os=None):
 
     # 获取 Python 解释器
     python_exe = get_uv_python()
-    # 获取 PyWebView 的 JS 文件路径
-    try:
-        import webview
 
-        webview_path = Path(webview.__file__).parent
-        js_path = webview_path / "js"
-    except ImportError:
-        js_path = None
-        print("警告: 无法找到 webview 模块，JS 文件可能不会包含在打包中")
     # 基础命令
     command = [
         str(python_exe),
         "-m",
         "nuitka",
         "--standalone",
+        # "--onefile",
         f"--output-dir={output_dir}",
         f"--include-data-dir={Config.DIST_DIR}=dist",
         f"--include-data-dir={Config.ASSETS_DIR}=assets",
         f"--include-data-file={Config.DB_DIR}=data.db",  # 新增的data.db配置
-        "--remove-output",  # 清理临时文件
-        "--enable-plugin=tk-inter",  # 启用 Tkinter 插件
-        "--assume-yes-for-downloads",  # 自动确认下载
     ]
-
-    # 包含 PyWebView 的 JS 文件
-    if js_path and js_path.exists():
-        command.append(f"--include-data-dir={js_path}=webview/js")
-    # 包含必要的 Python 包
-    include_packages = [
-        "fastapi",
-        "uvicorn",
-        "pydantic",
-        "sqlalchemy",
-        "psutil",
-    ]
-
-    for pkg in include_packages:
-        command.append(f"--include-package={pkg}")
+    command.extend(
+        [
+            "--enable-plugin=tk-inter",  # 启用 Tkinter 插件
+            "--enable-plugin=upx",  # 启用 UPX
+            "--assume-yes-for-downloads",  # 自动确认下载
+            "--lto=yes",
+            "--remove-output",  # 清理临时文件
+            # "--show-modules",
+            # "--report=compilation-report.xml",
+            # "--report=imported-modules.txt",
+        ]
+    )
 
     # 平台特定配置
     if target_os == "Windows":
@@ -159,6 +142,7 @@ def build_nuitka_command(target_os=None):
                 f"--windows-product-name={Config.APP_NAME}",
                 f"--windows-company-name={Config.COMPANY}",
                 f"--windows-file-version={Config.APP_VERSION}",
+                f"--windows-console-mode=hide",
             ]
         )
     # elif target_os == "Darwin":
@@ -180,7 +164,44 @@ def build_nuitka_command(target_os=None):
     #             "--linux-disable-console",
     #         ]
     #     )
+    # 排除不必要的模块
+    nofollow_import = [
+        "*.test",
+        "*.tests",
+        "unittest",
+        "setuptools",
+        "pip",
+        "pkg_resources",
+        "doctest",
+        "matplotlib",
+        "scipy",
+        "notebook",
+        "pytest",
+        "ipython",
+        "jupyter",
+        "tkinter.tix",
+        "tkinter.test",
+        "sqlalchemy.dialects.mysql",
+        "sqlalchemy.dialects.postgresql",
+        "sqlalchemy.dialects.oracle",
+        "sqlalchemy.dialects.mssql",
+        "webview.platforms.android",
+        "webview.platforms.cocoa",
+        "webview.platforms.gtk",
+        "webview.platforms.qt",
+    ]
 
+    for module in nofollow_import:
+        command.append(f"--nofollow-import-to={module}")
+    # 包含 PyWebView 的 JS 文件
+    # 包含必要的 Python 包
+    include_packages = [
+        "fastapi",
+        # "pydantic",
+    ]
+    for pkg in include_packages:
+        command.append(f"--include-package={pkg}")
+    command.append(f"--noinclude-default-mode=error")
     # 添加入口点
     command.append(str(Config.ENTRY_POINT))
 
@@ -198,18 +219,35 @@ def package_for_platform(target_os=None):
     command, output_dir = build_nuitka_command(target_os)
 
     # 显示完整命令（用于调试）
-    print("Nuitka 命令: " + " ".join(command) + " " + f"--output-dir={output_dir}")
+    print("Nuitka 命令: " + " ".join(command))
+    print(f"输出目录: {output_dir}")
     # 创建临时目录
     with tempfile.TemporaryDirectory() as tmp_dir:
         env = os.environ.copy()
         env["NUITKA_TEMP_DIR"] = tmp_dir
 
         try:
+            # with open("info.log", "w", encoding="utf-8") as logfile:
+            #     process = subprocess.Popen(
+            #         command,
+            #         stdout=logfile,
+            #         stderr=subprocess.STDOUT,
+            #         cwd=output_dir.parent,
+            #         env=env,
+            #         text=True,
+            #     )
+            #     process.communicate()
+            #     if process.returncode == 0:
+            #         print(f"{platform_name} 平台打包成功")
+            #         print(f"输出目录: {output_dir}")
+            #         return True
+            #     else:
+            #         print(f"{platform_name} 平台打包失败，退出码: {process.returncode}")
+            #         return False
             final_command = f'start cmd /c "{" ".join(command)}"'
             # 执行打包命令
-            result = subprocess.run(
+            subprocess.run(
                 final_command,
-                check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=True,
@@ -217,15 +255,7 @@ def package_for_platform(target_os=None):
                 text=True,
                 env=env,
             )
-            # 记录输出
-            if result.stdout:
-                print("Nuitka 输出:\n" + result.stdout)
-
-            # 记录输出
-            if result.stderr:
-                print("Nuitka 输出E:\n" + result.stderr)
-            print(f"{platform_name} 平台打包成功")
-            print(f"输出目录: {output_dir}")
+            print(f"{platform_name} 平台打包结束，输出目录: {output_dir}")
 
             return True
         except subprocess.CalledProcessError as e:

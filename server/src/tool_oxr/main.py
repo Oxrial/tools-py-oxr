@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from tool_oxr.db import init_db
-from tool_oxr.util import PORTS, get_resource_path
+from util import PORTS, get_resource_path
 from tool_oxr.api import routers
 
 

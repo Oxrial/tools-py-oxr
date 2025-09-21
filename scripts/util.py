@@ -192,4 +192,5 @@ def run_command(cmd, cwd=None, name: str = "Process", realtime_output: bool = Tr
         return wrapper
     except Exception as e:
         print(f"[{name}] 执行命令出错: {e}")
+        raise e.with_traceback(sys.exc_info()[2])  # 重新抛出异常以保留堆栈信息
         return None

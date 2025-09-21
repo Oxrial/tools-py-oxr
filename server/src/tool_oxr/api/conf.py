@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tool_oxr.api.models import ConfParam, ConfParamDto
 from tool_oxr.db import get_db
-from tool_oxr.util import wrap_response
+from util import wrap_response
 
 # 创建 API 路由
 router = APIRouter()
