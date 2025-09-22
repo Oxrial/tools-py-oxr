@@ -115,7 +115,7 @@ def build_nuitka_command(target_os=None):
         "-m",
         "nuitka",
         "--standalone",
-        # "--onefile",
+        "--onefile",
         f"--output-dir={output_dir}",
         f"--include-data-dir={Config.DIST_DIR}=dist",
         f"--include-data-dir={Config.ASSETS_DIR}=assets",
@@ -142,7 +142,7 @@ def build_nuitka_command(target_os=None):
                 f"--windows-product-name={Config.APP_NAME}",
                 f"--windows-company-name={Config.COMPANY}",
                 f"--windows-file-version={Config.APP_VERSION}",
-                f"--windows-console-mode=hide",
+                f"--windows-console-mode=disable",
             ]
         )
     # elif target_os == "Darwin":
@@ -227,23 +227,6 @@ def package_for_platform(target_os=None):
         env["NUITKA_TEMP_DIR"] = tmp_dir
 
         try:
-            # with open("info.log", "w", encoding="utf-8") as logfile:
-            #     process = subprocess.Popen(
-            #         command,
-            #         stdout=logfile,
-            #         stderr=subprocess.STDOUT,
-            #         cwd=output_dir.parent,
-            #         env=env,
-            #         text=True,
-            #     )
-            #     process.communicate()
-            #     if process.returncode == 0:
-            #         print(f"{platform_name} 平台打包成功")
-            #         print(f"输出目录: {output_dir}")
-            #         return True
-            #     else:
-            #         print(f"{platform_name} 平台打包失败，退出码: {process.returncode}")
-            #         return False
             final_command = f'start cmd /c "{" ".join(command)}"'
             # 执行打包命令
             subprocess.run(

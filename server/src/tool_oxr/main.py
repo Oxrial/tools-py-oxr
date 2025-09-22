@@ -75,7 +75,7 @@ app.mount(
 async def catch_all(request: Request, full_path: str):
     # 排除API和静态文件请求
     if not full_path.startswith(("api/", "static/")):
-        return FileResponse("dist/index.html")
+        return FileResponse(get_resource_path("dist/index.html"))
     else:
         return JSONResponse(status_code=404, content={"detail": "Not Found X"})
 
@@ -97,7 +97,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     """通用异常处理"""
-    print(f"未处理的异常: {str(exc)}", exc_info=True)
+    print(f"未处理的异常: {str(exc)}")
     return JSONResponse(status_code=500, content={"errorE": "内部服务器错误"})
 
 
