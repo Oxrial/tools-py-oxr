@@ -62,7 +62,7 @@ def main():
     window.events.loaded += on_loaded
 
     # 启动应用
-    webview.start(get_current_url, window)
+    webview.start(get_current_url, window, debug=True)
 
 
 if __name__ == "__main__":

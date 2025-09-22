@@ -142,7 +142,7 @@ def build_nuitka_command(target_os=None):
                 f"--windows-product-name={Config.APP_NAME}",
                 f"--windows-company-name={Config.COMPANY}",
                 f"--windows-file-version={Config.APP_VERSION}",
-                f"--windows-console-mode=disable",
+                # f"--windows-console-mode=disable",
             ]
         )
     # elif target_os == "Darwin":

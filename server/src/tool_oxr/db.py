@@ -3,11 +3,21 @@ from pathlib import Path
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
+from util import get_resource_path
 
 
 def get_db_path():
     # Nuitka打包后，sys.argv[0]为exe路径；开发时为main.py路径
     exe_dir = Path(sys.argv[0]).parent.resolve()
+    # 如果不存在
+    if not Path(exe_dir / "data.db").exists():
+        if (get_resource_path("data.db")).exists():
+            # 复制一份到exe目录
+            with (
+                open(get_resource_path("data.db"), "rb") as src,
+                open(exe_dir / "data.db", "wb") as dst,
+            ):
+                dst.write(src.read())
     return exe_dir / "data.db"
 
 

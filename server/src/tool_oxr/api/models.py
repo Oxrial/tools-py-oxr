@@ -25,4 +25,5 @@ class FfmpegCanmand(Base):
 class FfmpegCanmandDto(BaseModel):
     name: str
     command: str
-    description: str
+    # 可选
+    description: str | None = None
