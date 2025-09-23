@@ -5,16 +5,25 @@
 支持 Windows (.exe), macOS (.app), Linux (.bin)
 """
 
+import argparse
 import os
-from pathlib import Path
-import sys
+import platform
 import shutil
 import subprocess
-import platform
-import argparse
+import sys
 import tempfile
+from pathlib import Path
 
-from util import get_uv_python, BASE_DIR, BACKEND_DIR, run_command
+BASE_DIR1 = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR1))
+
+from environment import (
+    BACKEND_DIR,
+    BASE_DIR,
+    FRONTEND_DIR,
+    get_pnpm_path,
+    get_uv_python,
+)
 
 
 # 基础配置
@@ -30,8 +39,8 @@ class Config:
     ASSETS_DIR = BASE_DIR / "assets"  # 图标等资源
     OUTPUT_DIR = BASE_DIR / "dist-desktop"  # 最终输出目录
     OUTPUT_MAIN = OUTPUT_DIR / "windows" / "launcher.dist" / "launcher.exe"
-    TOOL_OXR_DIR = BACKEND_DIR / "src" / "tool_oxr"
-    DB_DIR = TOOL_OXR_DIR / "data.db"
+    FFMPEG_DIR = BACKEND_DIR / "src" / "for_ffmpeg"
+    DB_DIR = BASE_DIR / "data.db"
 
     # 入口文件
     ENTRY_POINT = BASE_DIR / "launcher.py"
@@ -142,7 +151,7 @@ def build_nuitka_command(target_os=None):
                 f"--windows-product-name={Config.APP_NAME}",
                 f"--windows-company-name={Config.COMPANY}",
                 f"--windows-file-version={Config.APP_VERSION}",
-                # f"--windows-console-mode=disable",
+                f"--windows-console-mode=disable",
             ]
         )
     # elif target_os == "Darwin":
@@ -279,6 +288,18 @@ def package_all_platforms():
     return success
 
 
+def build_prod():
+    # 构建前端
+    print("构建前端生产包...")
+    subprocess.run(
+        [get_pnpm_path(), "run", "build"],
+        cwd=FRONTEND_DIR,
+        stdout=sys.stdout,  # 直接输出到控制台
+        stderr=sys.stderr,
+        check=True,
+    )
+
+
 def main():
     # 解析命令行参数
     parser = argparse.ArgumentParser(description="桌面应用打包工具")
@@ -301,8 +322,12 @@ def main():
     # 清理输出目录
     cleanup_output()
 
+    # 确保生产构建已完成
+    if not Path("dist").exists():
+        print("前端生产构建不存在，自动构建中...")
+        build_prod()
     # 执行打包
-    success = True
+    success = False
 
     if args.platform == "all":
         success = package_all_platforms()

@@ -12,13 +12,13 @@ import setupExtend from 'vite-plugin-vue-setup-extend'
 export default defineConfig(() => ({
 	base: './',
 	server: {
-		port: 39001,
+		port: 39000,
 		strictPort: true,
 		host: true,
 		proxy: {
 			// 代理拦截匹配前缀
 			'/api': {
-				target: 'http://127.0.0.1:39003',
+				target: 'http://127.0.0.1:39001',
 				changeOrigin: true,
 				agent: new http.Agent(),
 				rewrite: (path) => path.replace(/^\/api/, ''),

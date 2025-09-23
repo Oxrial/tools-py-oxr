@@ -1,19 +1,68 @@
 import os
-import sys
-import subprocess
-import threading
 import shutil
+import socket
+import subprocess
+import sys
+import threading
 from pathlib import Path
 
 # 基础路径
-BASE_DIR = Path(__file__).parent.parent
+BASE_DIR = Path(__file__).parent
 
 BACKEND_DIR = BASE_DIR / "server"
 FRONTEND_DIR = BASE_DIR / "app"
-# 退出信号
-SIGNAL_FILE = BASE_DIR / "exit_signal.txt"
 
-PORTS = {"SERVER": 9000, "APP": 9001, "DESKTOP": 9002, "API": 9003, "RELOAD": 9004}
+
+def find_available_port(start_port, max_attempts=10):
+    """查找可用的端口"""
+    for port in range(start_port, start_port + max_attempts):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(("localhost", port))
+                return port
+        except OSError:
+            continue
+    return start_port  # 如果找不到可用端口，返回原始端口
+
+
+APP_PORT = find_available_port(39000)
+API_PORT = find_available_port(39001)
+RELOAD_PORT = find_available_port(39002)
+DESKTOP_PORT = find_available_port(39003)
+
+PORTS = {
+    "APP": APP_PORT,
+    "API": API_PORT,
+    "RELOAD": RELOAD_PORT,
+    "DESKTOP": DESKTOP_PORT,
+}
+
+
+def get_resource_path(relative_path: str = None) -> Path:
+    return (
+        BASE_DIR
+        if relative_path is None
+        else Path(os.path.join(BASE_DIR, relative_path))
+    )
+
+
+def isProd():
+    return not sys.executable.endswith("python.exe")
+
+
+def get_db_path():
+    # Nuitka打包后，sys.argv[0]为exe路径；开发时为main.py路径
+    exe_dir = Path(sys.argv[0]).parent.resolve()
+    # 如果不存在
+    if not Path(exe_dir / "data.db").exists():
+        if (get_resource_path("data.db")).exists():
+            # 复制一份到exe目录
+            with (
+                open(get_resource_path("data.db"), "rb") as src,
+                open(exe_dir / "data.db", "wb") as dst,
+            ):
+                dst.write(src.read())
+    return exe_dir / "data.db"
 
 
 # 获取 UV Python 路径
@@ -76,30 +125,6 @@ def get_pnpm_path():
     if project_pnpm.exists():
         return str(project_pnpm)
     return None
-
-
-def check_exit_signal():
-    """检查退出信号文件"""
-    return SIGNAL_FILE.exists()
-
-
-def write_exit_signal():
-    """写入退出信号文件"""
-    print("写出信号=》" + str(SIGNAL_FILE))
-    try:
-        with open(SIGNAL_FILE, "w") as f:
-            f.write("1")
-    except Exception as e:
-        print(f"写入信号文件失败: {e}")
-
-
-def remove_exit_signal():
-    """移除退出信号文件"""
-    try:
-        if SIGNAL_FILE.exists():
-            SIGNAL_FILE.unlink()
-    except Exception as e:
-        print(f"[ERROR] 删除信号文件失败: {e}")
 
 
 class ProcessWrapper:
@@ -193,4 +218,3 @@ def run_command(cmd, cwd=None, name: str = "Process", realtime_output: bool = Tr
     except Exception as e:
         print(f"[{name}] 执行命令出错: {e}")
         raise e.with_traceback(sys.exc_info()[2])  # 重新抛出异常以保留堆栈信息
-        return None

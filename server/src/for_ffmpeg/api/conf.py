@@ -2,9 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tool_oxr.api.models import ConfParam, ConfParamDto
-from tool_oxr.db import get_db
-from util import wrap_response
+from for_ffmpeg.api.models import ConfParam, ConfParamDto
+from for_ffmpeg.db import get_db, wrap_response
 
 # 创建 API 路由
 router = APIRouter()

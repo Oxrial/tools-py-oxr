@@ -1,6 +1,7 @@
 import axios, { type AxiosRequestConfig } from 'axios'
 import { ElMessage, ElLoading } from 'element-plus'
 import type { LoadingInstance } from 'element-plus/es/components/loading/src/loading.mjs'
+import { tr } from 'element-plus/es/locales.mjs'
 import qs from 'qs'
 
 declare global {
@@ -31,14 +32,18 @@ service.interceptors.request.use(
 const check = (res: { status: number; message: any }) => {
 	if (res.status === 0) {
 		ElMessage({ message: res.message || 'No Data', type: 'info', duration: 5 * 1000 })
-	} else if (res.status !== 1) {
+	} else if (res.status === 1) {
+		return true
+	} else {
 		ElMessage({ message: res.message || 'ERROR', type: 'error', duration: 5 * 1000 })
 	}
+	return false
 }
 // response interceptor
 service.interceptors.response.use(
 	(response) => {
 		const res = response.data
+		let re = false
 		window.loading?.close()
 		if (res instanceof Blob) {
 			if (response.headers['content-type'] === 'application/json') {
@@ -46,14 +51,15 @@ service.interceptors.response.use(
 				reader.readAsText(res, 'utf-8')
 				reader.onload = function () {
 					if (typeof reader.result === 'string') {
-						check(JSON.parse(reader.result))
+						re = check(JSON.parse(reader.result))
 					}
 				}
 			}
+			return res
 		} else {
-			check(res)
+			re = check(res)
 		}
-		return res
+		return re ? res : Promise.reject(new Error(res.message || 'ERROR'))
 	},
 	(error) => {
 		if (error.response && error.response.status === 401) {

@@ -10,9 +10,8 @@ from pydantic import BaseModel
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tool_oxr.api.models import FfmpegCanmand, FfmpegCanmandDto
-from tool_oxr.db import get_db
-from util import wrap_response
+from for_ffmpeg.api.models import FfmpegCanmand, FfmpegCanmandDto
+from for_ffmpeg.db import get_db, wrap_response
 
 # 创建 API 路由
 router = APIRouter()
@@ -28,7 +27,7 @@ async def select_files():
     file_paths = filedialog.askopenfilenames(title="选择文件")
     root.destroy()
     if not file_paths:
-        return wrap_response(message="未选择文件", status=2)
+        return wrap_response(message="未选择文件", status=0)
     return wrap_response(data={"file_paths": file_paths})
 
 
@@ -42,7 +41,7 @@ async def select_folder():
     folder_path = filedialog.askdirectory(title="选择文件夹")
     root.destroy()
     if not folder_path:
-        return wrap_response(message="未选择文件夹", status=2)
+        return wrap_response(message="未选择文件夹", status=0)
     return wrap_response(data={"folder_path": folder_path})
 
 

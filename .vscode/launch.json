@@ -12,8 +12,8 @@
 			"name": "Server",
 			"type": "debugpy",
 			"request": "launch",
-			"module": "tool_oxr.main",
-			"cwd": "${workspaceFolder}/server/src",
+			"module": "launcher",
+			"cwd": "${workspaceFolder}",
 			"console": "integratedTerminal"
 		}
 	],

@@ -51,7 +51,6 @@ import { ref, watch, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { callSuccess, getColumnWidth } from '@/util'
 import apis from '@/util/api'
-import { join } from 'path-browserify'
 import { ElSelect } from 'element-plus'
 const folderPath = ref('')
 const fileName = ref('')

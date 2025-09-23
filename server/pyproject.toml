@@ -36,10 +36,10 @@ profile = "black"
 
 # 关键修复：包位置配置
 [tool.hatch.build]
-packages = ["src/tool_oxr"] # 使用下划线而非连字符
+packages = ["src/for_ffmpeg"] # 使用下划线而非连字符
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/tool_oxr"]
+packages = ["src/for_ffmpeg"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/tool_oxr/*"]
+include = ["src/for_ffmpeg/*"]

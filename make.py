@@ -1,121 +1,46 @@
 import subprocess
 import sys
-from pathlib import Path
 
-from scripts.util import BACKEND_DIR, FRONTEND_DIR, get_pnpm_path, get_uv_python
-
-
-def install_dev():
-    """安装开发依赖"""
-    print("安装开发依赖...")
-    success = True
-
-    # 前端依赖
-    try:
-        # 直接执行命令，不通过 run_command
-        subprocess.run(
-            [get_pnpm_path(), "install"],
-            cwd=FRONTEND_DIR,
-            stdout=sys.stdout,  # 直接输出到控制台
-            stderr=sys.stderr,
-            check=True,
-        )
-    except subprocess.CalledProcessError as e:
-        print(f"前端安装失败: {e}")
-        success = False
-
-    # 后端依赖
-    venv_dir = BACKEND_DIR / ".venv"
-
-    if success and not venv_dir.exists():
-        print("创建 Python 虚拟环境...")
-        try:
-            subprocess.run(
-                ["uv", "venv", ".venv"],
-                cwd=BACKEND_DIR,
-                stdout=sys.stdout,  # 直接输出到控制台
-                stderr=sys.stderr,
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            print(f"虚拟环境创建失败: {e}")
-            success = False
-    else:
-        print("Python 虚拟环境已存在，跳过创建")
-
-    # 后端依赖安装
-    if success:
-        print("安装 Python 依赖...")
-        try:
-            subprocess.run(
-                ["uv", "pip", "install", "-e", "."],
-                cwd=BACKEND_DIR,
-                stdout=sys.stdout,  # 直接输出到控制台
-                stderr=sys.stderr,
-                check=True,
-            )
-        except subprocess.CalledProcessError as e:
-            print(f"依赖安装失败: {e}")
-            success = False
-
-    if success:
-        print("开发依赖安装完成")
-    else:
-        print("开发依赖安装失败")
-    return success
+from environment import get_uv_python
 
 
 def run_cmd(cmd, cwd=None):
     subprocess.run(cmd, cwd=cwd, check=True)
 
 
-def build_prod():
-    """构建生产环境"""
-    print("构建生产环境...")
-
-    # 构建前端
-    print("构建前端生产包...")
-    run_cmd([get_pnpm_path(), "run", "build"], cwd="app")
-
-    # 构建后端
-    # print("构建后端生产包...")
-    # run_command(["uv", "pip", "install", "--only-binary=:all", "."], cwd="server")
-
-    print("生产构建完成")
-
-
 def package_desktop():
     """打包桌面应用"""
     print("打包桌面应用...")
+    cmd = [get_uv_python(), "scripts/desktop.py"]
+    print(cmd)
+    # 执行打包
+    run_cmd(cmd)
+    print("桌面应用打包完成")
 
-    # 确保生产构建已完成
-    if not Path("dist").exists():
-        print("生产构建不存在，自动构建中...")
-        build_prod()
+
+def package_install():
+    print("安装依赖...")
 
     # 执行打包
-    run_cmd([get_uv_python(), "scripts/desktop.py"])
-    print("桌面应用打包完成")
+    run_cmd([get_uv_python(), "scripts/install.py"])
+    print("安装依赖完成")
 
 
 def main():
     commands = {
-        "install": install_dev,
-        "build": build_prod,
+        "install": package_install,
         "desktop": package_desktop,
     }
-
+    # 如果未传入命令或者命令不在列表中，默认使用 "desktop"
+    cmd = sys.argv[1] if len(sys.argv) >= 2 and sys.argv[1] in commands else "desktop"
     if len(sys.argv) < 2 or sys.argv[1] not in commands:
+        print("未指定有效命令，默认使用 'desktop'")
         print("可用命令:")
         print("  install     安装开发依赖")
-        print("  dev         启动开发环境")
-        print("  build       构建生产环境")
         print("  desktop     打包桌面应用")
-        return
 
-    command_name = sys.argv[1]
     # 执行命令
-    commands[command_name]()
+    commands[cmd]()
 
 
 if __name__ == "__main__":

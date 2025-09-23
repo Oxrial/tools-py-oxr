@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
 
-from tool_oxr.db import Base
+from for_ffmpeg.db import Base
 
 
 class ConfParam(Base):
