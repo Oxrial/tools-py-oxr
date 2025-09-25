@@ -28,7 +28,7 @@ export const routes: Array<RouteRecordRaw> = [
 		path: '/home',
 		component: Layout,
 		redirect: '/home/index',
-		meta: { title: '首页', icon: 'el-icon-house' },
+		meta: { title: '批量合并', icon: 'el-icon-house' },
 		children: [
 			{
 				path: 'index',
@@ -52,7 +52,7 @@ export const routes: Array<RouteRecordRaw> = [
 		path: '/config',
 		component: Layout,
 		redirect: '/config/index',
-		meta: { title: '配置', icon: 'el-icon-operation' },
+		meta: { title: 'ffmpeg配置', icon: 'el-icon-operation' },
 		children: [
 			{
 				path: 'index',

@@ -1,8 +1,10 @@
 <template>
 	<div class="logo-main" @click="clickCollapse">
-		<transition name="logoTransition" :appear="true">
-			<el-image v-if="!isCollapse" :src="logo" fit="contain" class="project-logo" />
-			<el-image v-else :src="logo2" fit="contain" class="project-logo" />
+		<transition name="logoTransition" :appear="true" :css="false">
+			<span v-if="!isCollapse" class="project-logo">
+				<el-image :src="logo" fit="contain" style="height: inherit" /><b>&emsp; Tools-OXR</b></span
+			>
+			<el-image v-else :src="logo" fit="contain" class="project-logo" />
 		</transition>
 	</div>
 	<el-scrollbar class="submenu-main">
@@ -20,8 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import logo from '@/assets/vue.svg'
-import logo2 from '@/assets/vue.svg'
+import logo from '@/assets/oxr-192x192.png'
 import SubMenu from './Submenu/index.vue'
 import { useRouter, useRoute } from 'vue-router'
 // import { routesObj } from '@/router'

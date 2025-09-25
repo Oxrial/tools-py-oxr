@@ -8,7 +8,7 @@
 		<el-container>
 			<el-header>
 				<div class="nav-bar">
-					<span>Tools-OXR</span>
+					<span>Tools-OXR {{ route.meta.title }}</span>
 					<span class="theme">白<ElSwitch v-model="theme" @click="() => toggleDark()" />黑</span>
 				</div>
 			</el-header>
@@ -41,6 +41,7 @@ const { isDark, toggleDark } = useDarkModeStore()
 const theme = ref(isDark)
 
 const isCollapse = ref(true)
+const route = useRoute()
 </script>
 <style scoped lang="scss">
 @import './index.scss';

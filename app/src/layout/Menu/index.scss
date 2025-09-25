@@ -4,12 +4,22 @@
 	height: 60px;
 	display: flex;
 	position: relative;
-	justify-content: center;
+	padding-left: 20px;
 	align-items: center;
+	b {
+		opacity: 0;
+	}
 	.project-logo {
 		display: flex;
 		height: theme(logo_height);
 		position: absolute;
+		transition: width 0.3s;
+		align-items: center;
+		overflow: hidden;
+		text-wrap: nowrap;
+		b {
+			opacity: 1;
+		}
 	}
 }
 .el-menu-vertical-demo {
@@ -25,23 +35,27 @@
 	@extend %centent-scrollbar;
 }
 
-.logoTransition-enter-active {
-	transition: all 0.3s;
-}
+// .logoTransition-enter-from {
+// 	width: 64px;
+// 	opacity: 0;
+// }
+// .logoTransition-enter-active {
+// 	transition: opactiy 0.3s ease-out;
+// }
 
-.logoTransition-enter-from {
-	width: 64px;
-}
-.logoTransition-enter-to {
-	width: theme(aside_width);
-}
-.logoTransition-leave-active {
-	transition: all 0.3s;
-}
+// .logoTransition-enter-to {
+// 	width: theme(aside_width);
+// 	opacity: 1;
+// }
 
-.logoTransition-leave-from {
-	width: theme(aside_width);
-}
-.logoTransition-leave-to {
-	width: 64px;
-}
+// .logoTransition-leave-from {
+// 	width: theme(aside_width);
+// 	opacity: 0;
+// }
+// .logoTransition-leave-active {
+// 	transition: opactiy 1.3s ease;
+// }
+// .logoTransition-leave-to {
+// 	width: 64px;
+// 	opacity: 0;
+// }
