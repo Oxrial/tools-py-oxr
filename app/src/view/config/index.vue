@@ -1,11 +1,18 @@
 <template>
 	<el-form :model="data" size="small">
-		<FormOperation :btns="btns" />
-		<EditTable border :formName="'commands'" :data="data" :columns="columns">
-			<template #operation="{ $index }">
-				<el-button link type="danger" @click="data.commands.splice($index, 1)">删除</el-button>
+		<el-card header="FFmpeg命令配置" shadow="always">
+			<template #header>
+				<div class="ffmpeg-header">
+					<div>FFmpeg 指令</div>
+					<FormOperation :btns="btns" />
+				</div>
 			</template>
-		</EditTable>
+			<EditTable border :formName="'commands'" :data="data" :columns="columns">
+				<template #operation="{ $index }">
+					<el-button link type="danger" @click="data.commands.splice($index, 1)">删除</el-button>
+				</template>
+			</EditTable>
+		</el-card>
 	</el-form>
 </template>
 
@@ -14,7 +21,8 @@ import EditTable from '@/components/form-module/edit-form-table/index.vue'
 import FormOperation from '@/components/form-module/form-operation/index.vue'
 import apis from '@/util/api'
 import { ElInput } from 'element-plus'
-const columns = reactive([
+shallowReactive
+const columns = shallowReactive([
 	{
 		label: '标识',
 		prop: 'name',
@@ -76,4 +84,13 @@ onMounted(() => {
 })
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.ffmpeg-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	.el-form-item {
+		margin-bottom: 0;
+	}
+}
+</style>

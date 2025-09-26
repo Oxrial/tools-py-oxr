@@ -52,7 +52,7 @@ export const routes: Array<RouteRecordRaw> = [
 		path: '/config',
 		component: Layout,
 		redirect: '/config/index',
-		meta: { title: 'ffmpeg配置', icon: 'el-icon-operation' },
+		meta: { title: '配置', icon: 'el-icon-operation' },
 		children: [
 			{
 				path: 'index',
