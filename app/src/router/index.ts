@@ -29,7 +29,7 @@ export const routes: Array<RouteRecordRaw> = [
 		path: '/home',
 		component: Layout,
 		redirect: '/home/index',
-		meta: { title: '首页', icon: 'el-icon-house' },
+		meta: { title: '批量合并', icon: 'el-icon-house' },
 		children: [
 			{
 				path: 'index',
