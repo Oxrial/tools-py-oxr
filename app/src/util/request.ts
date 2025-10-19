@@ -59,20 +59,22 @@ service.interceptors.response.use(
 		} else {
 			re = check(res)
 		}
+		!re && console.log('response', res)
 		return re ? res : Promise.reject(new Error(res.message || 'ERROR'))
 	},
 	(error) => {
+		console.error(error)
 		if (error.response && error.response.status === 401) {
 			// singleMsg(error.config.url)
 		} else {
 			ElMessage({
-				message: error.message,
+				message: `${error.code}-${error.message}-${error.response?.statusText || ''}`,
 				type: 'error',
 				duration: 5 * 1000
 			})
 		}
 		window.loading?.close()
-		console.log('err ' + error) // for debug
+		console.error(error) // for debug
 	}
 )
 

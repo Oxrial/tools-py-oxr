@@ -14,34 +14,36 @@ import EditTable from '@/components/form-module/edit-form-table/index.vue'
 import FormOperation from '@/components/form-module/form-operation/index.vue'
 import apis from '@/util/api'
 import { ElInput } from 'element-plus'
-const columns = reactive([
-	{
-		label: '标识',
-		prop: 'name',
-		rules: [{ required: true, message: '必填项', trigger: 'blur' }],
-		col: { width: 150 }
-	},
-	{
-		label: 'ffmpeg命令',
-		prop: 'command',
-		type: ElInput,
-		com: { type: 'textarea', spellcheck: false, autosize: { minRows: 1 } },
-		rules: [{ required: true, message: '必填项', trigger: 'blur' }]
-	},
-	{
-		label: '备注（占位符）',
-		prop: 'description',
-		type: ElInput,
-		com: { type: 'textarea', spellcheck: false, autosize: { minRows: 1 } },
-		col: { width: 200 }
-	},
-	{
-		label: '操作',
-		prop: 'operation',
-		slot: 'operation',
-		col: { width: 100 }
-	}
-])
+const columns = reactive(
+	markRaw([
+		{
+			label: '标识',
+			prop: 'name',
+			rules: [{ required: true, message: '必填项', trigger: 'blur' }],
+			col: { width: 150 }
+		},
+		{
+			label: 'ffmpeg命令',
+			prop: 'command',
+			type: ElInput,
+			com: { type: 'textarea', spellcheck: false, autosize: { minRows: 1 } },
+			rules: [{ required: true, message: '必填项', trigger: 'blur' }]
+		},
+		{
+			label: '备注（占位符）',
+			prop: 'description',
+			type: ElInput,
+			com: { type: 'textarea', spellcheck: false, autosize: { minRows: 1 } },
+			col: { width: 200 }
+		},
+		{
+			label: '操作',
+			prop: 'operation',
+			slot: 'operation',
+			col: { width: 100 }
+		}
+	])
+)
 const data = reactive<{ commands: any[] }>({
 	commands: []
 })

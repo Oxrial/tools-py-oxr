@@ -7,6 +7,7 @@ import type {
 } from 'vue-router'
 import Layout from '@/layout/index.vue'
 import { capitalize } from 'lodash-es'
+import { useTabsStore } from '@/store'
 export const routes: Array<RouteRecordRaw> = [
 	{
 		path: '/',
@@ -59,6 +60,14 @@ export const routes: Array<RouteRecordRaw> = [
 				component: () => import('@/view/config/index.vue')
 			}
 		]
+	},
+	{
+		path: '/redirect/:path(.*)',
+		name: 'Redirect',
+		component: () => import('@/view/Redirect.vue'),
+		meta: {
+			keepAlive: false // 重定向页面不需要缓存
+		}
 	}
 ]
 const recursionRoutesArr = (routesArrTemp: Array<RouteRecordRaw>, parentsPath: string = '') => {
@@ -79,10 +88,30 @@ const router = createRouter({
 	history: createWebHashHistory(import.meta.env.BASE_URL),
 	routes
 })
-router.beforeEach((to: RouteLocationNormalized, from: RouteLocationNormalizedLoaded, next: NavigationGuardNext) => {
-	const name = to.fullPath.replace('//g', '').toUpperCase()
-	// window name与路由匹配
-	window.name = name
+// router.beforeEach((to: RouteLocationNormalized, from: RouteLocationNormalizedLoaded, next: NavigationGuardNext) => {
+// 	const name = to.fullPath.replace('//g', '').toUpperCase()
+// 	// window name与路由匹配
+// 	window.name = name
+// 	next()
+// })
+// 路由守卫 - 添加标签页
+router.beforeEach((to, from, next) => {
+	const tabsStore = useTabsStore()
+	// 跳过重定向路由
+	if (to.name === 'Redirect') {
+		next()
+		return
+	}
+	// 只有有名称的路由才添加到标签页
+	if (to.name) {
+		tabsStore.addTab({
+			name: to.name,
+			path: to.path,
+			meta: to.meta,
+			fullPath: to.fullPath
+		})
+	}
+
 	next()
 })
 export default router

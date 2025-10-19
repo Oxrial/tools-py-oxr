@@ -16,6 +16,17 @@
 			>
 		</ElButtonGroup>
 	</div>
+	<div class="operation-bar">
+		<el-input
+			v-model="output_path"
+			:formatter="(value) => (defaultRef ? `[默] ${value}` : value)"
+			class="input-with-select"
+			@change="checkOutput"
+			clearable
+		/>
+		<ElButton type="primary" plain @click="selectFolder">输出目录</ElButton>
+		<span> </span>
+	</div>
 	<ElCard class="flv-list">
 		<VueDraggable v-model="sortedFiles" ghostClass="ghost" target="tbody" :animation="150">
 			<el-table :data="showFiles" :cell-class-name="renderCellClass" height="calc(100vh - 16rem)">
@@ -50,6 +61,14 @@ const fileExt = ref('m4a')
 const files = ref([])
 const sortedFiles = ref([])
 const ext = ref()
+const output_path = ref('')
+const selectFolder = async () => {
+	await apis.selectFolder({}, true, { timeout: 300000 }).then((res) => {
+		console.log(output_path.value, res.data.folder_path, output_path.value === res.data.folder_path)
+		defaultRef.value = output_path.value === res.data.folder_path
+		output_path.value = res.data.folder_path
+	})
+}
 const selectFiles = async () => {
 	await apis.selectFiles({}, true, { timeout: 300000 }).then((res) => {
 		files.value = res.data.file_paths
@@ -65,7 +84,18 @@ const selectFiles = async () => {
 					: f.substring(f.lastIndexOf('/') + 1)
 			}))
 		)
+		if (!output_path.value && files.value.length) {
+			defaultRef.value = true
+			output_path.value = files.value[0].substring(0, files.value[0].lastIndexOf('/'))
+		}
 	})
+}
+const defaultRef = ref(false)
+const checkOutput = (v) => {
+	if (!v && sortedFiles.value.length) {
+		defaultRef.value = true
+		output_path.value = sortedFiles.value[0].id.substring(0, sortedFiles.value[0].id.lastIndexOf('/'))
+	}
 }
 const cmds = ref([])
 const getCmds = () => {
@@ -89,6 +119,16 @@ watchEffect(
 			(f) => f.name.match(new RegExp(ext.value, 'i')) || f.name.includes(ext.value)
 		))
 )
+watchEffect(() => {
+	if (output_path.value) {
+		sortedFiles.value.map((f) => {
+			f.conv =
+				output_path.value +
+				'/' +
+				(fileExt.value ? f.name.substring(0, f.name.lastIndexOf('.') + 1) + fileExt.value : f.name)
+		})
+	}
+})
 const submit = computed(() =>
 	sortedFiles.value
 		.filter((s) => !s.delete && (s.name.match(new RegExp(ext.value, 'i')) || s.name.includes(ext.value)))
@@ -96,9 +136,10 @@ const submit = computed(() =>
 )
 const confirmAndMerge = async () => {
 	await apis
-		.createFilelistMerge({
+		.convertMedia({
 			convFiles: submit.value,
-			cmd: docmd.value
+			cmd: docmd.value,
+			output_path: output_path.value
 		})
 		.then(callSuccess)
 }

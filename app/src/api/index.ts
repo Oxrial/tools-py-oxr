@@ -8,6 +8,7 @@ const apiArr = [
 	'/create-filelist-merge_2',
 	'/save-ffmpeg-commands_2',
 	'/get-ffmpeg-commands',
-	'/select-files'
+	'/select-files',
+	'/convert-media_2'
 ] as const
 export default apiArr

@@ -107,17 +107,9 @@ def merge_files_task(req: MergeFilesDto, filelist_path: str, output_path: str):
         )
         print(f"准备合并，指令：{command}，输出文件：{output_path}")
         # 包装命令，使其在新的cmd窗口中运行，并在执行完成后关闭
-        final_command = f'start cmd /c "{command}"'
-        subprocess_result = subprocess.Popen(
-            final_command,
-            shell=True,
-            creationflags=subprocess.CREATE_NEW_CONSOLE,
-            text=True,
-            encoding="utf-8",
-        )
-        print(f"合并完成: {subprocess_result.stdout}")
-    except subprocess.CalledProcessError as e:
-        print(f"合并失败: {e}, stderr: {e.stderr}")
+        execute_conversion_task(command)
+    except Exception as e:
+        print(f"生成指令失败: {e}")
 
 
 # 保存ffmpeg命令,整体保存，替换FfmpegCanmand表中数据
@@ -158,3 +150,46 @@ async def get_ffmpeg_commands(session: AsyncSession = Depends(get_db)) -> dict:
     except Exception as e:
         print(f"获取ffmpeg命令失败: {e}")
         return wrap_response(message=f"获取ffmpeg命令失败: {str(e)}", status=2)
+
+
+class SongDto(BaseModel):
+    conv: str
+    id: str
+
+
+class ConvertMediaDto(BaseModel):
+    convFiles: List[SongDto]
+    output_path: str
+    cmd: str
+
+
+@router.post("/convert-media")
+async def convert_media(req: ConvertMediaDto, background_tasks: BackgroundTasks):
+    """后台执行媒体文件转换任务"""
+    if not req.convFiles:
+        return wrap_response(message="转换文件列表不能为空", status=2)
+    for _file in req.convFiles:
+        inf = _file.id.replace("\\", "/")
+        ouf = _file.conv.replace("\\", "/")
+        command = req.cmd.replace("IN_PUT", inf).replace("OUT_PUT", ouf)
+        print(f"准备转换，指令：[{command}]，输出文件：{ouf}")
+        # 等待后台任务执行转换完成后继续下一个文件
+        background_tasks.add_task(execute_conversion_task, command)
+    return wrap_response(message="转换任务已提交，待执行完成后通知结果")
+
+
+def execute_conversion_task(command: str):
+    """后台任务：执行媒体文件转换命令"""
+    try:
+        # 包装命令，使其在新的cmd窗口中运行，并在执行完成后关闭
+        final_command = f'start cmd /c "{command}"'
+        subprocess_result = subprocess.Popen(
+            final_command,
+            shell=True,
+            creationflags=subprocess.CREATE_NEW_CONSOLE,
+            text=True,
+            encoding="utf-8",
+        )
+        print(f"转换完成: {subprocess_result.stdout}")
+    except subprocess.CalledProcessError as e:
+        print(f"转换失败: {e}, stderr: {e.stderr}")

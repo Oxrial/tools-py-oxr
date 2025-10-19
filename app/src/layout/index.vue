@@ -13,11 +13,11 @@
 				</div>
 			</el-header>
 			<el-main>
-				<router-view v-slot="{ Component, route }">
-					<!-- mode:  -->
-					<!-- in-out：新元素先进行过渡，完成之后当前元素过渡离开。 -->
-					<!-- out-in：当前元素先进行过渡，完成之后新元素过渡进入。 -->
-					<!-- component key 唯一标识，动画区分不同的内容 -->
+				<!-- mode:  -->
+				<!-- in-out：新元素先进行过渡，完成之后当前元素过渡离开。 -->
+				<!-- out-in：当前元素先进行过渡，完成之后新元素过渡进入。 -->
+				<!-- component key 唯一标识，动画区分不同的内容 -->
+				<!-- <router-view v-slot="{ Component, route }">
 					<transition mode="out-in" enter-active-class="animate__animated animate__fadeIn">
 						<keep-alive>
 							<div :key="route.fullPath">
@@ -25,7 +25,8 @@
 							</div>
 						</keep-alive>
 					</transition>
-				</router-view>
+				</router-view> -->
+				<TabView />
 			</el-main>
 		</el-container>
 	</el-container>
@@ -35,6 +36,7 @@
 import 'animate.css'
 import Menu from './Menu/index.vue'
 import { useDarkModeStore } from '@/store'
+import TabView from './Tabs/index.vue'
 
 const { isDark, toggleDark } = useDarkModeStore()
 
