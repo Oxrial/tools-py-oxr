@@ -39,15 +39,10 @@ const clickCollapse = () => {
 	emits('update:isCollapse', !props.isCollapse)
 }
 const $routes = useRouter()
-const routes = computed(() => {
-	return $routes.options.routes
-})
-
 const $route = useRoute()
-const route = computed(() => {
-	return $route
-})
-const defaultActive = ref<string>(route.value.path)
+const routes = computed(() => $routes.options.routes)
+
+const defaultActive = computed(() => $route.path)
 </script>
 <style scoped lang="scss">
 @import './index.scss';

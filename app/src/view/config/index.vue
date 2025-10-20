@@ -17,11 +17,12 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'ConfigIndex' })
 import EditTable from '@/components/form-module/edit-form-table/index.vue'
 import FormOperation from '@/components/form-module/form-operation/index.vue'
 import apis from '@/util/api'
 import { ElInput } from 'element-plus'
-shallowReactive
+
 const columns = shallowReactive([
 	{
 		label: '标识',

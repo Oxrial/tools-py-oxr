@@ -38,7 +38,12 @@ class Config:
     DIST_DIR = BASE_DIR / "dist"  # 前端构建输出
     ASSETS_DIR = BASE_DIR / "assets"  # 图标等资源
     OUTPUT_DIR = BASE_DIR / "dist-desktop"  # 最终输出目录
-    OUTPUT_MAIN = OUTPUT_DIR / "windows" / "launcher.dist" / "launcher.exe"
+    OUTPUT_MAIN = (
+        OUTPUT_DIR
+        / "windows"
+        / "launcher.dist"
+        / f"${APP_NAME.lower()}${APP_VERSION}.exe"
+    )
     FFMPEG_DIR = BACKEND_DIR / "src" / "for_ffmpeg"
     DB_DIR = BASE_DIR / "data.db"
 

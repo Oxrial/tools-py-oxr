@@ -27,7 +27,7 @@
 		<ElButton type="primary" plain @click="selectFolder">输出目录</ElButton>
 		<span> </span>
 	</div>
-	<ElCard class="flv-list">
+	<ElCard>
 		<VueDraggable v-model="sortedFiles" ghostClass="ghost" target="tbody" :animation="150">
 			<el-table :data="showFiles" :cell-class-name="renderCellClass" height="calc(100vh - 16rem)">
 				<el-table-column prop="name" :width="getColumnWidth('name', sortedFiles)">
@@ -52,6 +52,7 @@
 </template>
 
 <script setup>
+defineOptions({ name: 'ConvertIndex' })
 import { ref, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { callSuccess, getColumnWidth } from '@/util'
@@ -164,9 +165,6 @@ const confirmAndMerge = async () => {
 }
 :deep(.delete) {
 	filter: brightness(0.96) blur(1px);
-}
-.flv-list {
-	margin-top: 20px;
 }
 </style>
 <style lang="scss">

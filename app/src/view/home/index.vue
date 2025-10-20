@@ -47,6 +47,7 @@
 </template>
 
 <script setup>
+defineOptions({ name: 'HomeIndex' })
 import { ref, watch, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { callSuccess, getColumnWidth } from '@/util'

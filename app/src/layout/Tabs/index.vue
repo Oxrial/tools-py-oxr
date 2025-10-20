@@ -4,42 +4,36 @@
 		<el-tabs
 			v-model="activeTab"
 			type="card"
-			closable
 			@tab-click="handleTabClick"
 			@tab-remove="handleTabRemove"
 			class="dynamic-tabs"
 		>
-			<el-tab-pane v-for="tab in tabs" :key="tab.id" :name="tab.id" :label="tab.title">
+			<el-tab-pane
+				v-for="tab in tabs"
+				:key="tab.id"
+				:name="tab.id"
+				:label="tab.title"
+				:closable="tab.name !== 'HomeIndex'"
+			>
 				<!-- 标签页内容通过 router-view 渲染 -->
 			</el-tab-pane>
-
-			<template #header>
-				<div class="tabs-header-extra">
-					<el-dropdown @command="handleDropdownCommand">
-						<el-button text>
-							<el-icon><More /></el-icon>
-						</el-button>
-						<template #dropdown>
-							<el-dropdown-menu>
-								<el-dropdown-item command="closeCurrent">关闭当前</el-dropdown-item>
-								<el-dropdown-item command="closeOther">关闭其他</el-dropdown-item>
-								<el-dropdown-item command="closeAll">关闭所有</el-dropdown-item>
-							</el-dropdown-menu>
-						</template>
-					</el-dropdown>
-				</div>
-			</template>
 		</el-tabs>
-
-		<!-- 路由视图区域 -->
-		<div class="tab-content">
-			{{ cachedComponents }}
-			<router-view v-slot="{ Component, route }">
-				<keep-alive :include="cachedComponents">
-					<component :is="Component" :key="route.fullPath" />
-				</keep-alive>
-			</router-view>
-		</div>
+		<el-dropdown @command="handleDropdownCommand">
+			<el-button text>
+				<el-icon><More /></el-icon>
+			</el-button>
+			<template #dropdown>
+				<el-dropdown-menu>
+					<el-dropdown-item command="closeCurrent" :disabled="tabsStore.activeTab === 'HomeIndex'"
+						>关闭当前</el-dropdown-item
+					>
+					<el-dropdown-item command="closeOther">关闭其他</el-dropdown-item>
+					<el-dropdown-item command="closeAll" :disabled="tabsStore.activeTab === 'HomeIndex'"
+						>关闭所有</el-dropdown-item
+					>
+				</el-dropdown-menu>
+			</template>
+		</el-dropdown>
 	</div>
 </template>
 
@@ -62,8 +56,6 @@ const activeTab = computed({
 		tabsStore.activeTab = value
 	}
 })
-
-const cachedComponents = computed(() => tabsStore.getCachedComponents)
 
 // 刷新标签页
 const refreshTab = (tabId: string) => {
@@ -138,9 +130,9 @@ const handleDropdownCommand = (command: DropdownCommand): void => {
 
 <style scoped>
 .tabs-container {
-	height: 100%;
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
+	align-items: center;
 }
 
 .dynamic-tabs {
@@ -157,12 +149,6 @@ const handleDropdownCommand = (command: DropdownCommand): void => {
 	flex: 1;
 	padding: 16px;
 	overflow: auto;
-}
-
-.tabs-header-extra {
-	display: flex;
-	align-items: center;
-	padding: 0 8px;
 }
 
 :deep(.tab-label) {

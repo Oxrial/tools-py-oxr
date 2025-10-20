@@ -101,27 +101,36 @@ export const useTabsStore = defineStore('tabs', () => {
 	const closeOtherTabs = (tabId: string, router: Router) => {
 		const tabToKeep = tabs.value.find((tab) => tab.id === tabId)
 		if (!tabToKeep) return
+		const tabsToKeep = tabs.value.filter((tab) => tab.id === tabId || tab.name === 'HomeIndex')
 
-		// 保留要激活的标签页，移除其他所有标签页
-		const tabsToRemove = tabs.value.filter((tab) => tab.id !== tabId)
-		// 从缓存中移除其他标签页对应的组件
-		tabsToRemove.forEach((tab) => {
-			if (tab.cacheName) {
+		tabs.value.forEach((tab) => {
+			if (tab.id !== tabId && tab.name !== 'HomeIndex' && tab.cacheName) {
 				cachedComponents.value.delete(tab.cacheName as string)
 			}
 		})
-		tabs.value = [tabToKeep]
+		tabs.value = tabsToKeep
 		activeTab.value = tabId
 		router.push(tabToKeep.fullPath)
 	}
 
 	// 关闭所有标签页
 	const closeAllTabs = (router: Router) => {
+		const homeTab = tabs.value.find((tab) => tab.name === 'HomeIndex')
+
 		// 清空所有缓存
 		cachedComponents.value.clear()
-		tabs.value = []
-		activeTab.value = ''
-		router.push('/')
+		if (homeTab && homeTab.cacheName) {
+			cachedComponents.value.add(homeTab.cacheName as string)
+			// 只保留 HomeIndex 标签
+			tabs.value = [homeTab]
+			activeTab.value = homeTab.id
+			router.push(homeTab.fullPath)
+		} else {
+			// 若没有 HomeIndex，则全部清空
+			tabs.value = []
+			activeTab.value = ''
+			router.push('/')
+		}
 	}
 	// 获取缓存的组件名称数组（用于 keep-alive）
 	const getCachedComponents = computed(() => {

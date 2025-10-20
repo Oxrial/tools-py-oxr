@@ -4,13 +4,18 @@
 			<div class="aside-main">
 				<Menu v-model:is-collapse="isCollapse" />
 			</div>
+			<span class="theme"
+				><ElSwitch
+					v-model="theme"
+					inline-prompt
+					active-text="黑"
+					inactive-text="白"
+					@click="() => toggleDark()"
+			/></span>
 		</el-aside>
 		<el-container>
 			<el-header>
-				<div class="nav-bar">
-					<span>Tools-OXR {{ route.meta.title }}</span>
-					<span class="theme">白<ElSwitch v-model="theme" @click="() => toggleDark()" />黑</span>
-				</div>
+				<TabView />
 			</el-header>
 			<el-main>
 				<!-- mode:  -->
@@ -26,7 +31,11 @@
 						</keep-alive>
 					</transition>
 				</router-view> -->
-				<TabView />
+				<router-view v-slot="{ Component, route }">
+					<keep-alive :include="cachedComponents">
+						<component :is="Component" :key="route.name" />
+					</keep-alive>
+				</router-view>
 			</el-main>
 		</el-container>
 	</el-container>
@@ -35,7 +44,7 @@
 <script setup lang="ts">
 import 'animate.css'
 import Menu from './Menu/index.vue'
-import { useDarkModeStore } from '@/store'
+import { useDarkModeStore, useTabsStore } from '@/store'
 import TabView from './Tabs/index.vue'
 
 const { isDark, toggleDark } = useDarkModeStore()
@@ -44,9 +53,17 @@ const theme = ref(isDark)
 
 const isCollapse = ref(true)
 const route = useRoute()
+
+const tabsStore = useTabsStore()
+
+const cachedComponents = computed(() => tabsStore.getCachedComponents)
 </script>
 <style scoped lang="scss">
 @import './index.scss';
+.el-header,
+.el-main {
+	padding-top: 20px;
+}
 </style>
 <style>
 .el-menu,

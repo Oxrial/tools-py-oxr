@@ -5,6 +5,7 @@ import subprocess
 import sys
 import threading
 from pathlib import Path
+import win32com.client
 
 # 基础路径
 BASE_DIR = Path(__file__).parent
@@ -50,19 +51,28 @@ def isProd():
     return not sys.executable.endswith("python.exe")
 
 
+def get_my_documents():
+    shell = win32com.client.Dispatch("WScript.Shell")
+    # 直接获取Windows系统中"我的文档"的特殊文件夹路径
+    return shell.SpecialFolders("MyDocuments")
+
+
 def get_db_path():
     # Nuitka打包后，sys.argv[0]为exe路径；开发时为main.py路径
-    exe_dir = Path(sys.argv[0]).parent.resolve()
+    document_dir = Path(get_my_documents()) / "tool-oxr"
+    # exe_dir = Path(sys.argv[0]).parent.resolve()
     # 如果不存在
-    if not Path(exe_dir / "data.db").exists():
+    if not Path(document_dir / "data.db").exists():
+        if not document_dir.exists():
+            document_dir.mkdir(parents=True, exist_ok=True)
         if (get_resource_path("data.db")).exists():
             # 复制一份到exe目录
             with (
                 open(get_resource_path("data.db"), "rb") as src,
-                open(exe_dir / "data.db", "wb") as dst,
+                open(document_dir / "data.db", "wb") as dst,
             ):
                 dst.write(src.read())
-    return exe_dir / "data.db"
+    return document_dir / "data.db"
 
 
 # 获取 UV Python 路径
