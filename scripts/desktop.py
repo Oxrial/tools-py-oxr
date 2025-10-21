@@ -38,12 +38,7 @@ class Config:
     DIST_DIR = BASE_DIR / "dist"  # 前端构建输出
     ASSETS_DIR = BASE_DIR / "assets"  # 图标等资源
     OUTPUT_DIR = BASE_DIR / "dist-desktop"  # 最终输出目录
-    OUTPUT_MAIN = (
-        OUTPUT_DIR
-        / "windows"
-        / "launcher.dist"
-        / f"${APP_NAME.lower()}${APP_VERSION}.exe"
-    )
+    OUTPUT_MAIN = f"{APP_NAME.lower()}{APP_VERSION}.exe"
     FFMPEG_DIR = BACKEND_DIR / "src" / "for_ffmpeg"
     DB_DIR = BASE_DIR / "data.db"
 
@@ -131,6 +126,7 @@ def build_nuitka_command(target_os=None):
         "--standalone",
         "--onefile",
         f"--output-dir={output_dir}",
+        f"--output-filename={Config.OUTPUT_MAIN}",
         f"--include-data-dir={Config.DIST_DIR}=dist",
         f"--include-data-dir={Config.ASSETS_DIR}=assets",
         f"--include-data-file={Config.DB_DIR}=data.db",  # 新增的data.db配置
@@ -342,8 +338,6 @@ def main():
         target_os = platform_map[args.platform]
         success = package_for_platform(target_os)
     print(f"打包完成${str(success)}")
-    if success:
-        subprocess.run(f"start cmd /c ${Config.OUTPUT_MAIN}", shell=True)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,6 @@ import subprocess
 import sys
 import threading
 from pathlib import Path
-import win32com.client
 
 # 基础路径
 BASE_DIR = Path(__file__).parent
@@ -52,14 +51,13 @@ def isProd():
 
 
 def get_my_documents():
-    shell = win32com.client.Dispatch("WScript.Shell")
-    # 直接获取Windows系统中"我的文档"的特殊文件夹路径
-    return shell.SpecialFolders("MyDocuments")
+    return os.path.expanduser("~\\Documents")
 
 
 def get_db_path():
     # Nuitka打包后，sys.argv[0]为exe路径；开发时为main.py路径
     document_dir = Path(get_my_documents()) / "tool-oxr"
+    print(f"Document directory: {document_dir}")
     # exe_dir = Path(sys.argv[0]).parent.resolve()
     # 如果不存在
     if not Path(document_dir / "data.db").exists():

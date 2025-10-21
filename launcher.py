@@ -10,8 +10,6 @@ from environment import PORTS, get_resource_path, isProd
 # 全局变量存储服务器状态
 server_ready = False
 
-print(PORTS["API"])
-
 
 def dev_fastapi():
     """启动FastAPI服务器"""
