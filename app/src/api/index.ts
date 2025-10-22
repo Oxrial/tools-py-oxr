@@ -9,6 +9,8 @@ const apiArr = [
 	'/save-ffmpeg-commands_2',
 	'/get-ffmpeg-commands',
 	'/select-files',
-	'/convert-media_2'
+	'/convert-media_2',
+	'/save-conf-param_2',
+	'/get-conf-param'
 ] as const
 export default apiArr

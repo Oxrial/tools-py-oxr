@@ -1,29 +1,40 @@
 <template>
-	<el-form :model="data" size="small">
-		<el-card header="FFmpeg命令配置" shadow="always">
-			<template #header>
-				<div class="ffmpeg-header">
-					<div>FFmpeg 指令</div>
-					<FormOperation :btns="btns" />
-				</div>
-			</template>
-			<EditTable border :formName="'commands'" :data="data" :columns="columns">
-				<template #operation="{ $index }">
-					<el-button link type="danger" @click="data.commands.splice($index, 1)">删除</el-button>
-				</template>
-			</EditTable>
-		</el-card>
-	</el-form>
+	<DbTable
+		header="FFmpeg 指令"
+		:data="data"
+		form-name="commands"
+		:columns="ffmpegColumns"
+		get-api="getFfmpegCommands"
+		save-api="saveFfmpegCommands"
+		@update:data="(d) => data['commands'].splice(0, data['commands'].length, ...d)"
+		@push:data="() => data['commands'].push({})"
+	/>
+	<DbTable
+		header="配置参数"
+		:data="data"
+		form-name="confs"
+		:columns="paramsColumns"
+		get-api="getConfParam"
+		save-api="saveConfParam"
+		@update:data="(d) => data['confs'].splice(0, data['confs'].length, ...d)"
+		@push:data="() => data['confs'].push({})"
+	/>
 </template>
 
 <script setup lang="ts">
-defineOptions({ name: 'ConfigIndex' })
-import EditTable from '@/components/form-module/edit-form-table/index.vue'
-import FormOperation from '@/components/form-module/form-operation/index.vue'
-import apis from '@/util/api'
+import DbTable from './module/db-table.vue'
 import { ElInput } from 'element-plus'
-
-const columns = shallowReactive([
+interface FFmpeg {
+	name: string
+	command: string
+	description: string
+}
+interface Param {
+	pkey: string
+	pvalue: string
+}
+const data = reactive<{ commands: Array<FFmpeg | any>; confs: Array<Param | any> }>({ commands: [], confs: [] })
+const ffmpegColumns = shallowReactive([
 	{
 		label: '标识',
 		prop: 'name',
@@ -51,47 +62,18 @@ const columns = shallowReactive([
 		col: { width: 100 }
 	}
 ])
-const data = reactive<{ commands: any[] }>({
-	commands: []
-})
-const btns = [
+const paramsColumns = shallowReactive([
 	{
-		label: '新增',
-		type: 'primary',
-		icon: 'el-icon-plus',
-		onClick: () => data.commands.push({})
+		label: '键',
+		prop: 'pkey',
+		rules: [{ required: true, message: '必填项', trigger: 'blur' }],
+		col: { width: 150 }
 	},
 	{
-		label: '全部保存',
-		type: 'primary',
-		icon: 'el-icon-finished',
-		onClick: () => {
-			apis.saveFfmpegCommands(data.commands).then((res) => {
-				ElMessage({ message: res.message, type: 'success' })
-				loadingFFmpegCommands()
-			})
-		}
+		label: '值',
+		prop: 'pvalue'
 	}
-]
-const loadingFFmpegCommands = () => {
-	apis.getFfmpegCommands().then((res) => {
-		if (res?.data?.length) {
-			data.commands.splice(0, data.commands.length, ...res.data)
-		}
-	})
-}
-onMounted(() => {
-	loadingFFmpegCommands()
-})
+])
 </script>
 
-<style lang="scss" scoped>
-.ffmpeg-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	.el-form-item {
-		margin-bottom: 0;
-	}
-}
-</style>
+<style lang="scss" scoped></style>

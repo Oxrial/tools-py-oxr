@@ -74,6 +74,7 @@ export const useTabsStore = defineStore('tabs', () => {
 
 	// 关闭标签页
 	const closeTab = (tabId: string, router: Router) => {
+		console.log(tabId)
 		const index = tabs.value.findIndex((tab) => tab.id === tabId)
 		if (index === -1) return
 

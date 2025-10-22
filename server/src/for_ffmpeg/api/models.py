@@ -6,12 +6,12 @@ from for_ffmpeg.db import Base
 
 class ConfParam(Base):
     __tablename__ = "conf_param"
-    pkey = Column(Integer, primary_key=True, index=True)
+    pkey = Column(String, primary_key=True, index=True)
     pvalue = Column(String)
 
 
 class ConfParamDto(BaseModel):
-    pkey: int
+    pkey: str
     pvalue: str
 
 

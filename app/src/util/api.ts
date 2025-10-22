@@ -63,6 +63,6 @@ apiArr.forEach((item) => {
 	apiObj[key] = ((params: any = {}, loading = false, headers = {}) =>
 		req[method](url, params, loading, headers)) as any
 })
-
+export type ApiKey = keyof typeof apiObj
 // 导出具有完整类型提示的api对象
 export default apiObj
