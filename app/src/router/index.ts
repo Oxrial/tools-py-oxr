@@ -29,7 +29,7 @@ export const routes: Array<RouteRecordRaw> = [
 		path: '/home',
 		component: Layout,
 		redirect: '/home/index',
-		meta: { title: '首页-批量合并', icon: 'el-icon-house' },
+		meta: { title: '首页 - 批量合并', icon: 'el-icon-house' },
 		children: [
 			{
 				path: 'index',
@@ -60,6 +60,14 @@ export const routes: Array<RouteRecordRaw> = [
 				component: () => import('@/view/config/index.vue')
 			}
 		]
+	},
+	{
+		path: '/redirect/:path(.*)',
+		meta: {
+			notLayout: true,
+			keepAlive: false // 重定向页面不需要缓存
+		},
+		component: () => import('@/view/Redirect.vue')
 	}
 ]
 const recursionRoutesArr = (routesArrTemp: Array<RouteRecordRaw>, parentsPath: string = '') => {
@@ -83,6 +91,13 @@ const router = createRouter({
 // 路由守卫 - 添加标签页
 router.beforeEach((to, from, next) => {
 	const tabsStore = useTabsStore()
+
+	// 跳过重定向路由
+	if (to.name === 'Redirect') {
+		next()
+		return
+	}
+
 	// 只有有名称的路由才添加到标签页
 	if (to.name) {
 		tabsStore.addTab({

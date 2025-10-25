@@ -57,6 +57,51 @@ const route = useRoute()
 const tabsStore = useTabsStore()
 
 const cachedComponents = computed(() => tabsStore.getCachedComponents)
+const router = useRouter()
+const onKeydown = (e: KeyboardEvent) => {
+	if (e.key === 'F5') {
+		e.preventDefault()
+
+		// 捕获当前路由路径 / tab 信息，避免异步中引用变动的变量
+		const currentFullPath = route.fullPath
+		const tab = tabsStore.tabs.find((t) => t.id === currentFullPath)
+
+		// 简单防护：确保 router 可用
+		if (!router || typeof router.replace !== 'function') {
+			console.warn('router not ready, skip refresh')
+			return
+		}
+
+		const doRedirect = async (targetPath: string) => {
+			try {
+				// 先导航到 /redirect 前缀，再回到目标路由以触发组件重建
+				await router.replace({ path: '/redirect' + targetPath })
+				await router.replace(targetPath)
+			} catch (err) {
+				console.error('redirect refresh failed', err)
+			}
+		}
+
+		// 如果有 cache 标识，通过删除缓存并走 /redirect 手段重建组件
+		if (tab?.cacheName) {
+			tabsStore.cachedComponents.delete(tab.cacheName as string)
+			// 延迟恢复缓存并触发重载
+			setTimeout(() => {
+				try {
+					tabsStore.cachedComponents.add(tab.cacheName as string)
+				} catch (err) {
+					console.warn('re-add cache failed', err)
+				}
+				void doRedirect(currentFullPath)
+			}, 120)
+		} else {
+			void doRedirect(currentFullPath)
+		}
+	}
+}
+
+onMounted(() => window.addEventListener('keydown', onKeydown))
+onUnmounted(() => window.removeEventListener('keydown', onKeydown))
 </script>
 <style scoped lang="scss">
 @import './index.scss';
